@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini Anki</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Mini Anki</h1>
+          <p>Proste fiszki do slowek po polsku i angielsku.</p>
+        </div>
+        <div class="stats" aria-label="Statystyki">
+          <span><strong id="totalCards">0</strong> kart</span>
+          <span><strong id="dueCards">0</strong> do nauki</span>
+        </div>
+      </header>
+
+      <section class="workspace" aria-label="Aplikacja fiszek">
+        <nav class="tabs" aria-label="Widoki">
+          <button class="tab active" data-view="studyView">Nauka</button>
+          <button class="tab" data-view="addView">Dodaj</button>
+          <button class="tab" data-view="cardsView">Karty</button>
+        </nav>
+
+        <section id="studyView" class="view active" aria-label="Nauka">
+          <div id="studyEmpty" class="empty-state">
+            <h2>Nie ma kart do powtorki</h2>
+            <p>Dodaj slowko albo wroc pozniej, gdy karta bedzie gotowa do nauki.</p>
+          </div>
+
+          <article id="flashcard" class="flashcard hidden" tabindex="0" aria-live="polite">
+            <div class="flashcard-meta">
+              <span id="cardDirection">PL -> EN</span>
+              <span id="cardProgress">0/0</span>
+            </div>
+            <div class="flashcard-body">
+              <p id="cardPrompt" class="prompt"></p>
+              <p id="cardAnswer" class="answer hidden"></p>
+              <p id="cardSentence" class="sentence hidden"></p>
+            </div>
+          </article>
+
+          <div id="studyControls" class="button-row hidden">
+            <button id="showAnswer" class="primary">Pokaz odpowiedz</button>
+            <button id="againCard">Jeszcze raz</button>
+            <button id="goodCard">Umiem</button>
+          </div>
+        </section>
+
+        <section id="addView" class="view" aria-label="Dodawanie slowek">
+          <form id="addForm" class="form-panel" autocomplete="off">
+            <div class="field">
+              <label for="dictionary">Slownik</label>
+              <select id="dictionary" name="dictionary"></select>
+            </div>
+
+            <div class="grid-two">
+              <div class="field">
+                <label for="polishWord">Slowko po polsku</label>
+                <input id="polishWord" name="polishWord" type="text" required placeholder="np. dom">
+              </div>
+              <div class="field">
+                <label for="englishWord">Slowko po angielsku</label>
+                <input id="englishWord" name="englishWord" type="text" required placeholder="np. house">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="sentence">Zdanie z tym slowem</label>
+              <textarea id="sentence" name="sentence" rows="3" placeholder="Zdanie utworzy sie automatycznie"></textarea>
+            </div>
+
+            <div id="duplicateNotice" class="notice hidden" role="status"></div>
+            <div id="addNotice" class="success hidden" role="status"></div>
+
+            <div class="button-row">
+              <button class="primary" type="submit">Dodaj karte</button>
+              <button id="clearForm" type="button">Wyczysc</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="cardsView" class="view" aria-label="Lista kart">
+          <div class="cards-toolbar">
+            <input id="searchCards" type="search" placeholder="Szukaj slowka">
+            <button id="resetDemo" type="button">Przywroc prosty slownik</button>
+          </div>
+          <div id="cardsList" class="cards-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
