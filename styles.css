@@ -223,6 +223,11 @@ label {
   font-weight: 700;
 }
 
+small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 input,
 select,
 textarea {
@@ -236,6 +241,13 @@ textarea {
 
 textarea {
   resize: vertical;
+}
+
+.ai-field {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8fbf9;
 }
 
 .notice,

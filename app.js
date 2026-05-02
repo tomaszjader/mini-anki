@@ -1,4 +1,5 @@
 const STORAGE_KEY = "mini-anki-cards-v1";
+const API_KEY_STORAGE_KEY = "mini-anki-openai-key-v1";
 
 const seedCards = [
   {
@@ -62,8 +63,10 @@ const els = {
   dictionary: document.querySelector("#dictionary"),
   polishWord: document.querySelector("#polishWord"),
   englishWord: document.querySelector("#englishWord"),
+  apiKey: document.querySelector("#apiKey"),
   sentence: document.querySelector("#sentence"),
   translation: document.querySelector("#translation"),
+  generateAi: document.querySelector("#generateAi"),
   addForm: document.querySelector("#addForm"),
   clearForm: document.querySelector("#clearForm"),
   duplicateNotice: document.querySelector("#duplicateNotice"),
@@ -113,26 +116,6 @@ function normalizeWord(value) {
   return value.trim().toLocaleLowerCase("pl-PL");
 }
 
-function simpleSentence(en) {
-  const word = en.trim();
-  if (!word) {
-    return "";
-  }
-
-  const lower = word.toLocaleLowerCase("en-US");
-  const article = /^[aeiou]/i.test(lower) ? "an" : "a";
-
-  if (lower.includes(" ")) {
-    return `I learn "${word}" today.`;
-  }
-
-  if (lower.endsWith("ing")) {
-    return `I am ${word}.`;
-  }
-
-  return `This is ${article} ${word}.`;
-}
-
 function simplePolishSentence(pl) {
   const word = pl.trim();
   if (!word) {
@@ -140,10 +123,10 @@ function simplePolishSentence(pl) {
   }
 
   if (word.includes(" ")) {
-    return `Uczę się wyrażenia "${word}" dzisiaj.`;
+    return `Ucze sie wyrazenia "${word}".`;
   }
 
-  return `To jest ${word}.`;
+  return `Ucze sie slowa "${word}".`;
 }
 
 function renderHighlightedText(element, text, word) {
@@ -166,6 +149,68 @@ function renderHighlightedText(element, text, word) {
   highlight.textContent = match;
 
   element.append(before, highlight, after);
+}
+
+function saveApiKey() {
+  localStorage.setItem(API_KEY_STORAGE_KEY, els.apiKey.value.trim());
+}
+
+function loadApiKey() {
+  els.apiKey.value = localStorage.getItem(API_KEY_STORAGE_KEY) || "";
+}
+
+async function generateAiSentence() {
+  const pl = els.polishWord.value.trim();
+  const en = els.englishWord.value.trim();
+  const apiKey = els.apiKey.value.trim();
+
+  els.addNotice.classList.add("hidden");
+  els.duplicateNotice.classList.add("hidden");
+
+  if (!pl || !en) {
+    els.duplicateNotice.textContent = "Wpisz slowko po polsku i po angielsku.";
+    els.duplicateNotice.classList.remove("hidden");
+    return null;
+  }
+
+  if (apiKey) {
+    saveApiKey();
+  }
+  els.generateAi.disabled = true;
+  els.generateAi.textContent = "Generuje...";
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        apiKey,
+        pl,
+        en
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const parsed = await response.json();
+    els.sentence.value = parsed.english_sentence;
+    els.translation.value = parsed.polish_translation;
+    els.addNotice.textContent = "AI wygenerowalo zdanie.";
+    els.addNotice.classList.remove("hidden");
+    return parsed;
+  } catch (error) {
+    els.duplicateNotice.textContent = "Nie udalo sie wygenerowac przez AI. Sprawdz klucz API i internet.";
+    els.duplicateNotice.classList.remove("hidden");
+    console.error(error);
+    return null;
+  } finally {
+    els.generateAi.disabled = false;
+    els.generateAi.textContent = "Generuj AI";
+  }
 }
 
 function getDictionaries() {
@@ -201,15 +246,6 @@ function findDuplicate(pl, en, dictionary) {
     const sameEnglish = normalizeWord(card.en) === cleanEn;
     return sameDictionary && (samePolish || sameEnglish);
   });
-}
-
-function updateSentence() {
-  if (!els.sentence.value.trim()) {
-    els.sentence.value = simpleSentence(els.englishWord.value);
-  }
-  if (!els.translation.value.trim()) {
-    els.translation.value = simplePolishSentence(els.polishWord.value);
-  }
 }
 
 function updateDuplicateNotice() {
@@ -373,16 +409,17 @@ els.dictionary.addEventListener("change", () => {
 });
 
 els.englishWord.addEventListener("input", () => {
-  els.sentence.value = simpleSentence(els.englishWord.value);
   updateDuplicateNotice();
 });
 
 els.polishWord.addEventListener("input", () => {
-  els.translation.value = simplePolishSentence(els.polishWord.value);
   updateDuplicateNotice();
 });
 
-els.addForm.addEventListener("submit", (event) => {
+els.apiKey.addEventListener("change", saveApiKey);
+els.generateAi.addEventListener("click", generateAiSentence);
+
+els.addForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const dictionary = getSelectedDictionary();
@@ -398,13 +435,20 @@ els.addForm.addEventListener("submit", (event) => {
     return;
   }
 
+  if (!els.sentence.value.trim() || !els.translation.value.trim()) {
+    const generated = await generateAiSentence();
+    if (!generated) {
+      return;
+    }
+  }
+
   state.cards.unshift({
     id: crypto.randomUUID(),
     dictionary,
     pl,
     en,
-    sentence: els.sentence.value.trim() || simpleSentence(en),
-    translation: els.translation.value.trim() || simplePolishSentence(pl),
+    sentence: els.sentence.value.trim(),
+    translation: els.translation.value.trim(),
     level: 0,
     dueAt: Date.now(),
     createdAt: Date.now()
@@ -469,5 +513,6 @@ document.addEventListener("keydown", (event) => {
 });
 
 renderDictionaries();
+loadApiKey();
 pickCard();
 renderAll();

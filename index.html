@@ -69,20 +69,27 @@
               </div>
             </div>
 
+            <div class="field ai-field">
+              <label for="apiKey">Klucz OpenAI API</label>
+              <input id="apiKey" name="apiKey" type="password" placeholder="sk-...">
+              <small>Klucz jest zapisany tylko w tej przegladarce. Do prywatnej lokalnej nauki.</small>
+            </div>
+
             <div class="field">
               <label for="sentence">Zdanie po angielsku</label>
-              <textarea id="sentence" name="sentence" rows="3" placeholder="Zdanie utworzy sie automatycznie"></textarea>
+              <textarea id="sentence" name="sentence" rows="3" placeholder="Kliknij Generuj AI albo dodaj karte z zapisanym kluczem"></textarea>
             </div>
 
             <div class="field">
               <label for="translation">Tlumaczenie zdania po polsku</label>
-              <textarea id="translation" name="translation" rows="3" placeholder="Tlumaczenie utworzy sie automatycznie"></textarea>
+              <textarea id="translation" name="translation" rows="3" placeholder="Tlumaczenie utworzy sie razem ze zdaniem"></textarea>
             </div>
 
             <div id="duplicateNotice" class="notice hidden" role="status"></div>
             <div id="addNotice" class="success hidden" role="status"></div>
 
             <div class="button-row">
+              <button id="generateAi" type="button">Generuj AI</button>
               <button class="primary" type="submit">Dodaj karte</button>
               <button id="clearForm" type="button">Wyczysc</button>
             </div>
