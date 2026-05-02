@@ -184,6 +184,11 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.study-word {
+  color: #16833f;
+  font-weight: 900;
+}
+
 .sentence {
   width: min(620px, 100%);
   color: var(--muted);

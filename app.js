@@ -7,6 +7,7 @@ const seedCards = [
     pl: "dom",
     en: "house",
     sentence: "This is a house.",
+    translation: "To jest dom.",
     level: 0,
     dueAt: Date.now(),
     createdAt: Date.now()
@@ -17,6 +18,7 @@ const seedCards = [
     pl: "kot",
     en: "cat",
     sentence: "The cat is small.",
+    translation: "Kot jest maly.",
     level: 0,
     dueAt: Date.now(),
     createdAt: Date.now()
@@ -27,6 +29,7 @@ const seedCards = [
     pl: "woda",
     en: "water",
     sentence: "I drink water.",
+    translation: "Pije wode.",
     level: 0,
     dueAt: Date.now(),
     createdAt: Date.now()
@@ -37,6 +40,7 @@ const seedCards = [
     pl: "jesc",
     en: "eat",
     sentence: "I eat bread.",
+    translation: "Jem chleb.",
     level: 0,
     dueAt: Date.now(),
     createdAt: Date.now()
@@ -47,8 +51,7 @@ const intervals = [0, 1, 10, 60, 60 * 24, 60 * 24 * 3, 60 * 24 * 7];
 const state = {
   cards: loadCards(),
   current: null,
-  answerVisible: false,
-  direction: "pl-en"
+  answerVisible: false
 };
 
 const els = {
@@ -60,6 +63,7 @@ const els = {
   polishWord: document.querySelector("#polishWord"),
   englishWord: document.querySelector("#englishWord"),
   sentence: document.querySelector("#sentence"),
+  translation: document.querySelector("#translation"),
   addForm: document.querySelector("#addForm"),
   clearForm: document.querySelector("#clearForm"),
   duplicateNotice: document.querySelector("#duplicateNotice"),
@@ -88,10 +92,17 @@ function loadCards() {
 
   try {
     const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : seedCards;
+    return Array.isArray(parsed) ? parsed.map(normalizeCard) : seedCards;
   } catch {
     return seedCards;
   }
+}
+
+function normalizeCard(card) {
+  return {
+    ...card,
+    translation: card.translation || simplePolishSentence(card.pl || "")
+  };
 }
 
 function saveCards() {
@@ -120,6 +131,41 @@ function simpleSentence(en) {
   }
 
   return `This is ${article} ${word}.`;
+}
+
+function simplePolishSentence(pl) {
+  const word = pl.trim();
+  if (!word) {
+    return "";
+  }
+
+  if (word.includes(" ")) {
+    return `Uczę się wyrażenia "${word}" dzisiaj.`;
+  }
+
+  return `To jest ${word}.`;
+}
+
+function renderHighlightedText(element, text, word) {
+  element.textContent = "";
+
+  const source = text || "";
+  const needle = (word || "").trim();
+  const matchAt = source.toLocaleLowerCase("pl-PL").indexOf(needle.toLocaleLowerCase("pl-PL"));
+
+  if (!needle || matchAt === -1) {
+    element.textContent = source;
+    return;
+  }
+
+  const before = source.slice(0, matchAt);
+  const match = source.slice(matchAt, matchAt + needle.length);
+  const after = source.slice(matchAt + needle.length);
+  const highlight = document.createElement("span");
+  highlight.className = "study-word";
+  highlight.textContent = match;
+
+  element.append(before, highlight, after);
 }
 
 function getDictionaries() {
@@ -160,6 +206,9 @@ function findDuplicate(pl, en, dictionary) {
 function updateSentence() {
   if (!els.sentence.value.trim()) {
     els.sentence.value = simpleSentence(els.englishWord.value);
+  }
+  if (!els.translation.value.trim()) {
+    els.translation.value = simplePolishSentence(els.polishWord.value);
   }
 }
 
@@ -212,7 +261,6 @@ function pickCard() {
   const due = dueCards();
   state.current = due[0] || null;
   state.answerVisible = false;
-  state.direction = Math.random() > 0.5 ? "pl-en" : "en-pl";
   renderStudy();
 }
 
@@ -227,17 +275,17 @@ function renderStudy() {
     return;
   }
 
-  const prompt = state.direction === "pl-en" ? state.current.pl : state.current.en;
-  const answer = state.direction === "pl-en" ? state.current.en : state.current.pl;
+  const prompt = state.current.sentence;
+  const answer = state.current.translation || simplePolishSentence(state.current.pl);
 
   els.studyEmpty.classList.add("hidden");
   els.flashcard.classList.remove("hidden");
   els.studyControls.classList.remove("hidden");
-  els.cardDirection.textContent = state.direction === "pl-en" ? "PL -> EN" : "EN -> PL";
+  els.cardDirection.textContent = "EN zdanie -> PL tlumaczenie";
   els.cardProgress.textContent = `${Math.max(1, due.indexOf(state.current) + 1)}/${due.length}`;
-  els.cardPrompt.textContent = prompt;
-  els.cardAnswer.textContent = answer;
-  els.cardSentence.textContent = state.current.sentence;
+  renderHighlightedText(els.cardPrompt, prompt, state.current.en);
+  renderHighlightedText(els.cardAnswer, answer, state.current.pl);
+  els.cardSentence.textContent = `${state.current.en} = ${state.current.pl}`;
   els.cardAnswer.classList.toggle("hidden", !state.answerVisible);
   els.cardSentence.classList.toggle("hidden", !state.answerVisible);
   els.showAnswer.classList.toggle("hidden", state.answerVisible);
@@ -261,7 +309,7 @@ function rateCurrent(isGood) {
 function renderCards() {
   const query = normalizeWord(els.searchCards.value);
   const cards = state.cards.filter((card) => {
-    const haystack = `${card.pl} ${card.en} ${card.sentence} ${card.dictionary}`.toLocaleLowerCase("pl-PL");
+    const haystack = `${card.pl} ${card.en} ${card.sentence} ${card.translation || ""} ${card.dictionary}`.toLocaleLowerCase("pl-PL");
     return haystack.includes(query);
   });
 
@@ -283,7 +331,7 @@ function renderCards() {
     const title = document.createElement("strong");
     const sentence = document.createElement("p");
     title.textContent = `${card.pl} - ${card.en}`;
-    sentence.textContent = `${card.dictionary}: ${card.sentence}`;
+    sentence.textContent = `${card.dictionary}: ${card.sentence} / ${card.translation || simplePolishSentence(card.pl)}`;
     text.append(title, sentence);
 
     const remove = document.createElement("button");
@@ -329,7 +377,10 @@ els.englishWord.addEventListener("input", () => {
   updateDuplicateNotice();
 });
 
-els.polishWord.addEventListener("input", updateDuplicateNotice);
+els.polishWord.addEventListener("input", () => {
+  els.translation.value = simplePolishSentence(els.polishWord.value);
+  updateDuplicateNotice();
+});
 
 els.addForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -353,6 +404,7 @@ els.addForm.addEventListener("submit", (event) => {
     pl,
     en,
     sentence: els.sentence.value.trim() || simpleSentence(en),
+    translation: els.translation.value.trim() || simplePolishSentence(pl),
     level: 0,
     dueAt: Date.now(),
     createdAt: Date.now()
