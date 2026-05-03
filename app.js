@@ -79,6 +79,9 @@ const els = {
   cardAnswer: document.querySelector("#cardAnswer"),
   cardSentence: document.querySelector("#cardSentence"),
   studyControls: document.querySelector("#studyControls"),
+  studyNotice: document.querySelector("#studyNotice"),
+  playWord: document.querySelector("#playWord"),
+  playSentence: document.querySelector("#playSentence"),
   showAnswer: document.querySelector("#showAnswer"),
   againCard: document.querySelector("#againCard"),
   goodCard: document.querySelector("#goodCard"),
@@ -213,6 +216,56 @@ async function generateAiSentence() {
   }
 }
 
+async function playSpeech(text, kind, button) {
+  const apiKey = els.apiKey.value.trim();
+
+  els.studyNotice.classList.add("hidden");
+
+  if (!text) {
+    return;
+  }
+
+  if (apiKey) {
+    saveApiKey();
+  }
+
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = "Laduje...";
+
+  try {
+    const response = await fetch("/api/speech", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        apiKey,
+        text,
+        kind
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    audio.addEventListener("ended", () => URL.revokeObjectURL(audioUrl), { once: true });
+    audio.addEventListener("error", () => URL.revokeObjectURL(audioUrl), { once: true });
+    await audio.play();
+  } catch (error) {
+    els.studyNotice.textContent = "Nie udalo sie odtworzyc audio. Sprawdz klucz API i internet.";
+    els.studyNotice.classList.remove("hidden");
+    console.error(error);
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
 function getDictionaries() {
   return [...new Set(["Prosty slownik", ...state.cards.map((card) => card.dictionary)])];
 }
@@ -305,9 +358,10 @@ function renderStudy() {
   renderStats();
 
   if (!state.current) {
-    els.studyEmpty.classList.remove("hidden");
-    els.flashcard.classList.add("hidden");
-    els.studyControls.classList.add("hidden");
+  els.studyEmpty.classList.remove("hidden");
+  els.flashcard.classList.add("hidden");
+  els.studyControls.classList.add("hidden");
+  els.studyNotice.classList.add("hidden");
     return;
   }
 
@@ -474,6 +528,14 @@ els.clearForm.addEventListener("click", () => {
 els.showAnswer.addEventListener("click", () => {
   state.answerVisible = true;
   renderStudy();
+});
+
+els.playWord.addEventListener("click", () => {
+  playSpeech(state.current?.en || "", "word", els.playWord);
+});
+
+els.playSentence.addEventListener("click", () => {
+  playSpeech(state.current?.sentence || "", "sentence", els.playSentence);
 });
 
 els.againCard.addEventListener("click", () => rateCurrent(false));

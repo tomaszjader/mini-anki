@@ -4,6 +4,8 @@ const path = require("path");
 
 const PORT = Number(process.env.PORT || 3000);
 const OPENAI_MODEL = "gpt-5.5";
+const TTS_MODEL = "gpt-4o-mini-tts";
+const TTS_VOICE = "coral";
 const ROOT = __dirname;
 
 const mimeTypes = {
@@ -15,6 +17,14 @@ const mimeTypes = {
 function sendJson(res, status, body) {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   res.end(JSON.stringify(body));
+}
+
+function sendAudio(res, status, buffer, contentType = "audio/mpeg") {
+  res.writeHead(status, {
+    "Content-Type": contentType,
+    "Cache-Control": "no-store"
+  });
+  res.end(buffer);
 }
 
 function readBody(req) {
@@ -104,6 +114,49 @@ async function generateSentence(req, res) {
   }
 }
 
+async function synthesizeSpeech(req, res) {
+  try {
+    const body = JSON.parse(await readBody(req));
+    const apiKey = (body.apiKey || process.env.OPENAI_API_KEY || "").trim();
+    const text = (body.text || "").trim();
+    const kind = body.kind === "word" ? "word" : "sentence";
+
+    if (!apiKey || !text) {
+      sendJson(res, 400, { error: "Missing API key or text." });
+      return;
+    }
+
+    const instructions = kind === "word"
+      ? "Say only this English word or phrase once. Use clear beginner-friendly pronunciation."
+      : "Read this English sentence naturally and clearly for a beginner language learner.";
+
+    const response = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: TTS_MODEL,
+        voice: TTS_VOICE,
+        input: text,
+        instructions,
+        response_format: "mp3"
+      })
+    });
+
+    if (!response.ok) {
+      sendJson(res, response.status, { error: await response.text() });
+      return;
+    }
+
+    const audio = Buffer.from(await response.arrayBuffer());
+    sendAudio(res, 200, audio, response.headers.get("content-type") || "audio/mpeg");
+  } catch (error) {
+    sendJson(res, 500, { error: error.message });
+  }
+}
+
 function serveStatic(req, res) {
   const requested = req.url === "/" ? "/index.html" : req.url;
   const pathname = decodeURIComponent(requested.split("?")[0]);
@@ -132,6 +185,11 @@ function serveStatic(req, res) {
 const server = http.createServer((req, res) => {
   if (req.method === "POST" && req.url === "/api/generate") {
     generateSentence(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/speech") {
+    synthesizeSpeech(req, res);
     return;
   }
 
