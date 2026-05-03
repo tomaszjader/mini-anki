@@ -4,6 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mini Anki</title>
+    <script>
+      try {
+        if (localStorage.getItem("mini-anki-theme-v1") === "dark") {
+          document.documentElement.dataset.theme = "dark";
+        }
+      } catch {}
+    </script>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -13,17 +20,21 @@
           <h1>Mini Anki</h1>
           <p>Proste fiszki do slowek po polsku i angielsku.</p>
         </div>
-        <div class="stats" aria-label="Statystyki">
-          <span><strong id="totalCards">0</strong> kart</span>
-          <span><strong id="dueCards">0</strong> do nauki</span>
+        <div class="topbar-actions">
+          <button id="themeToggle" class="theme-toggle subtle" type="button" aria-pressed="false" data-icon="◐">Ciemny motyw</button>
+          <div class="stats" aria-label="Statystyki">
+            <span><strong id="totalCards">0</strong> kart</span>
+            <span><strong id="dueCards">0</strong> do nauki</span>
+            <span><strong id="newCardsLeft">0</strong> nowych dzis</span>
+          </div>
         </div>
       </header>
 
       <section class="workspace" aria-label="Aplikacja fiszek">
         <nav class="tabs" aria-label="Widoki">
-          <button class="tab active" data-view="studyView">Nauka</button>
-          <button class="tab" data-view="addView">Dodaj</button>
-          <button class="tab" data-view="cardsView">Karty</button>
+          <button class="tab active" data-view="studyView" data-icon="◎">Nauka</button>
+          <button class="tab" data-view="addView" data-icon="+">Dodaj</button>
+          <button class="tab" data-view="cardsView" data-icon="▤">Karty</button>
         </nav>
 
         <section id="studyView" class="view active" aria-label="Nauka">
@@ -45,11 +56,13 @@
           </article>
 
           <div id="studyControls" class="button-row hidden">
-            <button id="playWord" type="button">Odtworz slowo</button>
-            <button id="playSentence" type="button">Odtworz zdanie</button>
-            <button id="showAnswer" class="primary">Pokaz odpowiedz</button>
-            <button id="againCard">Jeszcze raz</button>
-            <button id="goodCard">Umiem</button>
+            <button id="playWord" class="secondary" type="button" data-icon="▶">Odtworz slowo</button>
+            <button id="playSentence" class="secondary" type="button" data-icon="▸">Odtworz zdanie</button>
+            <button id="showAnswer" class="primary" type="button" data-icon="?">Pokaz odpowiedz</button>
+            <button id="againCard" class="danger" type="button" data-icon="↻">Jeszcze raz</button>
+            <button id="hardCard" class="warning" type="button" data-icon="!">Trudna</button>
+            <button id="goodCard" class="success-btn" type="button" data-icon="✓">Umiem</button>
+            <button id="easyCard" class="easy" type="button" data-icon="★">Latwa</button>
           </div>
           <div id="studyNotice" class="notice hidden" role="status"></div>
         </section>
@@ -63,11 +76,22 @@
 
             <div class="grid-two">
               <div class="field">
-                <label for="polishWord">Slowko po polsku</label>
-                <input id="polishWord" name="polishWord" type="text" required placeholder="np. dom">
+                <label for="sourceLanguage">Znam</label>
+                <select id="sourceLanguage" name="sourceLanguage"></select>
               </div>
               <div class="field">
-                <label for="englishWord">Slowko po angielsku</label>
+                <label for="targetLanguage">Ucze sie</label>
+                <select id="targetLanguage" name="targetLanguage"></select>
+              </div>
+            </div>
+
+            <div class="grid-two">
+              <div class="field">
+                <label id="sourceWordLabel" for="polishWord">Tlumaczenie</label>
+                <input id="polishWord" name="polishWord" type="text" placeholder="moze uzupelnic AI">
+              </div>
+              <div class="field">
+                <label id="targetWordLabel" for="englishWord">Slowko</label>
                 <input id="englishWord" name="englishWord" type="text" required placeholder="np. house">
               </div>
             </div>
@@ -79,22 +103,22 @@
             </div>
 
             <div class="field">
-              <label for="sentence">Zdanie po angielsku</label>
+              <label id="sentenceLabel" for="sentence">Zdanie</label>
               <textarea id="sentence" name="sentence" rows="3" placeholder="Kliknij Generuj AI albo dodaj karte z zapisanym kluczem"></textarea>
             </div>
 
             <div class="field">
-              <label for="translation">Tlumaczenie zdania po polsku</label>
-              <textarea id="translation" name="translation" rows="3" placeholder="Tlumaczenie utworzy sie razem ze zdaniem"></textarea>
+              <label id="translationLabel" for="translation">Tlumaczenie zdania</label>
+              <textarea id="translation" name="translation" rows="3" placeholder="Opcjonalne, AI uzupelni automatycznie"></textarea>
             </div>
 
             <div id="duplicateNotice" class="notice hidden" role="status"></div>
             <div id="addNotice" class="success hidden" role="status"></div>
 
             <div class="button-row">
-              <button id="generateAi" type="button">Generuj AI</button>
-              <button class="primary" type="submit">Dodaj karte</button>
-              <button id="clearForm" type="button">Wyczysc</button>
+              <button id="generateAi" class="secondary" type="button" data-icon="✦">Generuj AI</button>
+              <button class="primary" type="submit" data-icon="+">Dodaj karte</button>
+              <button id="clearForm" class="subtle" type="button" data-icon="×">Wyczysc</button>
             </div>
           </form>
         </section>
@@ -102,8 +126,16 @@
         <section id="cardsView" class="view" aria-label="Lista kart">
           <div class="cards-toolbar">
             <input id="searchCards" type="search" placeholder="Szukaj slowka">
-            <button id="resetDemo" type="button">Przywroc prosty slownik</button>
+            <label class="limit-control" for="newCardsLimit">
+              Nowe/dzien
+              <input id="newCardsLimit" type="number" min="0" max="200" step="1">
+            </label>
+            <button id="exportCards" class="secondary" type="button" data-icon="↓">Eksport</button>
+            <button id="importCards" class="secondary" type="button" data-icon="↑">Import</button>
+            <button id="resetDemo" class="warning" type="button" data-icon="↺">Przywroc prosty slownik</button>
+            <input id="importFile" class="hidden" type="file" accept="application/json,.json">
           </div>
+          <div id="cardsNotice" class="success hidden" role="status"></div>
           <div id="cardsList" class="cards-list"></div>
         </section>
       </section>
