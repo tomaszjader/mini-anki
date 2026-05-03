@@ -29,61 +29,6 @@ const languageOptions = [
   { code: "zh", name: "chinski", apiName: "Chinese" }
 ];
 
-const seedCards = [
-  {
-    id: crypto.randomUUID(),
-    dictionary: "Prosty slownik",
-    sourceLanguage: "pl",
-    targetLanguage: "en",
-    pl: "dom",
-    en: "house",
-    sentence: "This is a house.",
-    translation: "To jest dom.",
-    level: 0,
-    dueAt: Date.now(),
-    createdAt: Date.now()
-  },
-  {
-    id: crypto.randomUUID(),
-    dictionary: "Prosty slownik",
-    sourceLanguage: "pl",
-    targetLanguage: "en",
-    pl: "kot",
-    en: "cat",
-    sentence: "The cat is small.",
-    translation: "Kot jest maly.",
-    level: 0,
-    dueAt: Date.now(),
-    createdAt: Date.now()
-  },
-  {
-    id: crypto.randomUUID(),
-    dictionary: "Prosty slownik",
-    sourceLanguage: "pl",
-    targetLanguage: "en",
-    pl: "woda",
-    en: "water",
-    sentence: "I drink water.",
-    translation: "Pije wode.",
-    level: 0,
-    dueAt: Date.now(),
-    createdAt: Date.now()
-  },
-  {
-    id: crypto.randomUUID(),
-    dictionary: "Prosty slownik",
-    sourceLanguage: "pl",
-    targetLanguage: "en",
-    pl: "jesc",
-    en: "eat",
-    sentence: "I eat bread.",
-    translation: "Jem chleb.",
-    level: 0,
-    dueAt: Date.now(),
-    createdAt: Date.now()
-  }
-];
-
 const reviewIntervals = [
   5,
   10,
@@ -149,7 +94,6 @@ const els = {
   importCards: document.querySelector("#importCards"),
   importFile: document.querySelector("#importFile"),
   cardsNotice: document.querySelector("#cardsNotice"),
-  resetDemo: document.querySelector("#resetDemo"),
   themeToggle: document.querySelector("#themeToggle")
 };
 
@@ -173,14 +117,14 @@ function setTheme(theme) {
 function loadCards() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) {
-    return seedCards.map(normalizeCard);
+    return [];
   }
 
   try {
     const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed.map(normalizeCard) : seedCards.map(normalizeCard);
+    return Array.isArray(parsed) ? parsed.map(normalizeCard) : [];
   } catch {
-    return seedCards.map(normalizeCard);
+    return [];
   }
 }
 
@@ -931,13 +875,6 @@ els.importFile.addEventListener("change", async () => {
     els.cardsNotice.className = "notice";
     console.error(error);
   }
-});
-
-els.resetDemo.addEventListener("click", () => {
-  state.cards = seedCards.map((card) => normalizeCard({ ...card, id: crypto.randomUUID(), dueAt: Date.now() }));
-  saveCards();
-  pickCard();
-  renderAll();
 });
 
 els.themeToggle.addEventListener("click", () => {
