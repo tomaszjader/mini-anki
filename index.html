@@ -18,14 +18,15 @@
       <header class="topbar">
         <div>
           <h1>Mini Anki</h1>
-          <p>Proste fiszki do slowek po polsku i angielsku.</p>
+          <p>Proste fiszki do słówek po polsku i angielsku.</p>
         </div>
         <div class="topbar-actions">
           <button id="themeToggle" class="theme-toggle subtle" type="button" aria-pressed="false" data-icon="◐">Ciemny motyw</button>
           <div class="stats" aria-label="Statystyki">
             <span><strong id="totalCards">0</strong> kart</span>
             <span><strong id="dueCards">0</strong> do nauki</span>
-            <span><strong id="newCardsLeft">0</strong> nowych dzis</span>
+            <span><strong id="newCardsLeft">0</strong> nowych dziś</span>
+            <span><strong id="studiedToday">0</strong> dziś</span>
           </div>
         </div>
       </header>
@@ -39,13 +40,13 @@
 
         <section id="studyView" class="view active" aria-label="Nauka">
           <div id="studyEmpty" class="empty-state">
-            <h2>Nie ma kart do powtorki</h2>
-            <p>Dodaj slowko albo wroc pozniej, gdy karta bedzie gotowa do nauki.</p>
+            <h2>Nie ma kart do powtórki</h2>
+            <p>Dodaj słówko albo wróć później, gdy karta będzie gotowa do nauki.</p>
           </div>
 
           <article id="flashcard" class="flashcard hidden" tabindex="0" aria-live="polite">
             <div class="flashcard-meta">
-              <span id="cardDirection">EN zdanie -> PL tlumaczenie</span>
+              <span id="cardDirection">EN zdanie → PL tłumaczenie</span>
               <span id="cardProgress">0/0</span>
             </div>
             <div class="flashcard-body">
@@ -56,22 +57,28 @@
           </article>
 
           <div id="studyControls" class="button-row hidden">
-            <button id="playWord" class="secondary" type="button" data-icon="▶">Odtworz slowo</button>
-            <button id="playSentence" class="secondary" type="button" data-icon="▸">Odtworz zdanie</button>
-            <button id="showAnswer" class="primary" type="button" data-icon="?">Pokaz odpowiedz</button>
+            <button id="playWord" class="secondary" type="button" data-icon="▶">Odtwórz słowo</button>
+            <button id="playSentence" class="secondary" type="button" data-icon="▸">Odtwórz zdanie</button>
+            <button id="showAnswer" class="primary" type="button" data-icon="?">Pokaż odpowiedź</button>
             <button id="againCard" class="danger" type="button" data-icon="↻">Jeszcze raz</button>
             <button id="hardCard" class="warning" type="button" data-icon="!">Trudna</button>
             <button id="goodCard" class="success-btn" type="button" data-icon="✓">Umiem</button>
-            <button id="easyCard" class="easy" type="button" data-icon="★">Latwa</button>
+            <button id="easyCard" class="easy" type="button" data-icon="★">Łatwa</button>
+            <button id="suspendCard" class="subtle" type="button" data-icon="⏸">Wstrzymaj</button>
           </div>
           <div id="studyNotice" class="notice hidden" role="status"></div>
         </section>
 
-        <section id="addView" class="view" aria-label="Dodawanie slowek">
+        <section id="addView" class="view" aria-label="Dodawanie słówek">
           <form id="addForm" class="form-panel" autocomplete="off">
             <div class="field">
-              <label for="dictionary">Slownik</label>
+              <label for="dictionary">Słownik</label>
               <select id="dictionary" name="dictionary"></select>
+            </div>
+
+            <div id="newDictionaryField" class="field hidden">
+              <label for="newDictionaryName">Nazwa nowego słownika</label>
+              <input id="newDictionaryName" name="newDictionaryName" type="text" placeholder="np. Hiszpański A1">
             </div>
 
             <div class="grid-two">
@@ -80,18 +87,18 @@
                 <select id="sourceLanguage" name="sourceLanguage"></select>
               </div>
               <div class="field">
-                <label for="targetLanguage">Ucze sie</label>
+                <label for="targetLanguage">Uczę się</label>
                 <select id="targetLanguage" name="targetLanguage"></select>
               </div>
             </div>
 
             <div class="grid-two">
               <div class="field">
-                <label id="sourceWordLabel" for="polishWord">Tlumaczenie</label>
-                <input id="polishWord" name="polishWord" type="text" placeholder="moze uzupelnic AI">
+                <label id="sourceWordLabel" for="polishWord">Tłumaczenie</label>
+                <input id="polishWord" name="polishWord" type="text" placeholder="może uzupełnić AI">
               </div>
               <div class="field">
-                <label id="targetWordLabel" for="englishWord">Slowko</label>
+                <label id="targetWordLabel" for="englishWord">Słówko</label>
                 <input id="englishWord" name="englishWord" type="text" required placeholder="np. house">
               </div>
             </div>
@@ -99,7 +106,7 @@
             <div class="field ai-field">
               <label for="apiKey">Klucz OpenAI API</label>
               <input id="apiKey" name="apiKey" type="password" placeholder="sk-...">
-              <small>Klucz jest zapisany tylko w tej przegladarce. Do prywatnej lokalnej nauki.</small>
+              <small>Klucz jest zapisany tylko w tej przeglądarce. Do prywatnej lokalnej nauki.</small>
             </div>
 
             <div class="field">
@@ -108,8 +115,8 @@
             </div>
 
             <div class="field">
-              <label id="translationLabel" for="translation">Tlumaczenie zdania</label>
-              <textarea id="translation" name="translation" rows="3" placeholder="Opcjonalne, AI uzupelni automatycznie"></textarea>
+              <label id="translationLabel" for="translation">Tłumaczenie zdania</label>
+              <textarea id="translation" name="translation" rows="3" placeholder="Opcjonalne, AI uzupełni automatycznie"></textarea>
             </div>
 
             <div id="duplicateNotice" class="notice hidden" role="status"></div>
@@ -117,19 +124,32 @@
 
             <div class="button-row">
               <button id="generateAi" class="secondary" type="button" data-icon="✦">Generuj AI</button>
-              <button class="primary" type="submit" data-icon="+">Dodaj karte</button>
-              <button id="clearForm" class="subtle" type="button" data-icon="×">Wyczysc</button>
+              <button class="primary" type="submit" data-icon="+">Dodaj kartę</button>
+              <button id="clearForm" class="subtle" type="button" data-icon="×">Wyczyść</button>
             </div>
           </form>
         </section>
 
         <section id="cardsView" class="view" aria-label="Lista kart">
           <div class="cards-toolbar">
-            <input id="searchCards" type="search" placeholder="Szukaj slowka">
+            <input id="searchCards" type="search" placeholder="Szukaj słówka">
+            <select id="cardDictionaryFilter" aria-label="Filtr słownika"></select>
+            <select id="cardStatusFilter" aria-label="Filtr statusu">
+              <option value="all">Wszystkie</option>
+              <option value="due">Do nauki</option>
+              <option value="new">Nowe</option>
+              <option value="learning">W trakcie</option>
+              <option value="mastered">Opanowane</option>
+              <option value="suspended">Wstrzymane</option>
+            </select>
             <label class="limit-control" for="newCardsLimit">
               Nowe/dzien
               <input id="newCardsLimit" type="number" min="0" max="200" step="1">
             </label>
+            <select id="importMode" aria-label="Tryb importu">
+              <option value="merge">Import: połącz</option>
+              <option value="replace">Import: zastąp</option>
+            </select>
             <button id="exportCards" class="secondary" type="button" data-icon="↓">Eksport</button>
             <button id="importCards" class="secondary" type="button" data-icon="↑">Import</button>
             <input id="importFile" class="hidden" type="file" accept="application/json,.json">
@@ -138,6 +158,49 @@
           <div id="cardsList" class="cards-list"></div>
         </section>
       </section>
+
+      <dialog id="editDialog" class="edit-dialog">
+        <form id="editForm" method="dialog" class="form-panel">
+          <h2>Edytuj kartę</h2>
+          <div class="grid-two">
+            <div class="field">
+              <label for="editDictionary">Słownik</label>
+              <input id="editDictionary" name="editDictionary" type="text" required>
+            </div>
+            <div class="field">
+              <label for="editTargetWord">Słówko</label>
+              <input id="editTargetWord" name="editTargetWord" type="text" required>
+            </div>
+          </div>
+          <div class="grid-two">
+            <div class="field">
+              <label for="editSourceWord">Tłumaczenie</label>
+              <input id="editSourceWord" name="editSourceWord" type="text" required>
+            </div>
+            <div class="field">
+              <label for="editDueAt">Następna powtórka</label>
+              <input id="editDueAt" name="editDueAt" type="datetime-local">
+            </div>
+          </div>
+          <div class="field">
+            <label for="editSentence">Zdanie</label>
+            <textarea id="editSentence" name="editSentence" rows="3" required></textarea>
+          </div>
+          <div class="field">
+            <label for="editTranslation">Tłumaczenie zdania</label>
+            <textarea id="editTranslation" name="editTranslation" rows="3" required></textarea>
+          </div>
+          <label class="check-control">
+            <input id="editSuspended" name="editSuspended" type="checkbox">
+            Wstrzymaj kartę
+          </label>
+          <div id="editNotice" class="notice hidden" role="status"></div>
+          <div class="button-row">
+            <button class="primary" type="submit" data-icon="✓">Zapisz</button>
+            <button id="cancelEdit" class="subtle" type="button" data-icon="×">Anuluj</button>
+          </div>
+        </form>
+      </dialog>
     </main>
 
     <script src="app.js"></script>

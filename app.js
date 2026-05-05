@@ -45,7 +45,8 @@ const state = {
   cards: loadCards(),
   settings: loadSettings(),
   current: null,
-  answerVisible: false
+  answerVisible: false,
+  editingCardId: null
 };
 
 const els = {
@@ -54,7 +55,10 @@ const els = {
   totalCards: document.querySelector("#totalCards"),
   dueCards: document.querySelector("#dueCards"),
   newCardsLeft: document.querySelector("#newCardsLeft"),
+  studiedToday: document.querySelector("#studiedToday"),
   dictionary: document.querySelector("#dictionary"),
+  newDictionaryField: document.querySelector("#newDictionaryField"),
+  newDictionaryName: document.querySelector("#newDictionaryName"),
   sourceLanguage: document.querySelector("#sourceLanguage"),
   targetLanguage: document.querySelector("#targetLanguage"),
   sourceWordLabel: document.querySelector("#sourceWordLabel"),
@@ -87,14 +91,29 @@ const els = {
   hardCard: document.querySelector("#hardCard"),
   goodCard: document.querySelector("#goodCard"),
   easyCard: document.querySelector("#easyCard"),
+  suspendCard: document.querySelector("#suspendCard"),
   cardsList: document.querySelector("#cardsList"),
   searchCards: document.querySelector("#searchCards"),
+  cardDictionaryFilter: document.querySelector("#cardDictionaryFilter"),
+  cardStatusFilter: document.querySelector("#cardStatusFilter"),
   newCardsLimit: document.querySelector("#newCardsLimit"),
+  importMode: document.querySelector("#importMode"),
   exportCards: document.querySelector("#exportCards"),
   importCards: document.querySelector("#importCards"),
   importFile: document.querySelector("#importFile"),
   cardsNotice: document.querySelector("#cardsNotice"),
-  themeToggle: document.querySelector("#themeToggle")
+  themeToggle: document.querySelector("#themeToggle"),
+  editDialog: document.querySelector("#editDialog"),
+  editForm: document.querySelector("#editForm"),
+  editDictionary: document.querySelector("#editDictionary"),
+  editSourceWord: document.querySelector("#editSourceWord"),
+  editTargetWord: document.querySelector("#editTargetWord"),
+  editSentence: document.querySelector("#editSentence"),
+  editTranslation: document.querySelector("#editTranslation"),
+  editDueAt: document.querySelector("#editDueAt"),
+  editSuspended: document.querySelector("#editSuspended"),
+  editNotice: document.querySelector("#editNotice"),
+  cancelEdit: document.querySelector("#cancelEdit")
 };
 
 function loadTheme() {
@@ -151,18 +170,28 @@ function normalizeSettings(settings) {
 }
 
 function normalizeCard(card) {
+  const pl = String(card.pl || card.sourceWord || "").trim();
+  const en = String(card.en || card.targetWord || "").trim();
+
   return {
     ...card,
+    id: card.id || crypto.randomUUID(),
+    dictionary: String(card.dictionary || "Prosty slownik").trim() || "Prosty slownik",
+    pl,
+    en,
+    sentence: String(card.sentence || "").trim(),
     sourceLanguage: card.sourceLanguage || "pl",
     targetLanguage: card.targetLanguage || "en",
-    translation: card.translation || simplePolishSentence(card.pl || ""),
+    translation: String(card.translation || simplePolishSentence(pl)).trim(),
     level: Number.isFinite(Number(card.level)) ? Number(card.level) : 0,
     ease: Number.isFinite(Number(card.ease)) ? Number(card.ease) : 2.5,
     reps: Number.isFinite(Number(card.reps)) ? Number(card.reps) : 0,
     lapses: Number.isFinite(Number(card.lapses)) ? Number(card.lapses) : 0,
     dueAt: Number.isFinite(Number(card.dueAt)) ? Number(card.dueAt) : Date.now(),
+    createdAt: Number.isFinite(Number(card.createdAt)) ? Number(card.createdAt) : Date.now(),
     firstStudiedAt: card.firstStudiedAt || null,
-    lastReviewedAt: card.lastReviewedAt || null
+    lastReviewedAt: card.lastReviewedAt || null,
+    suspended: Boolean(card.suspended)
   };
 }
 
@@ -213,12 +242,12 @@ function updateLanguageLabels() {
   const source = getLanguage(els.sourceLanguage.value);
   const target = getLanguage(els.targetLanguage.value);
 
-  els.sourceWordLabel.textContent = `Tlumaczenie (${source.name})`;
-  els.targetWordLabel.textContent = `Slowko (${target.name})`;
+  els.sourceWordLabel.textContent = `Tłumaczenie (${source.name})`;
+  els.targetWordLabel.textContent = `Słówko (${target.name})`;
   els.sentenceLabel.textContent = `Zdanie (${target.name})`;
-  els.translationLabel.textContent = `Tlumaczenie zdania (${source.name})`;
+  els.translationLabel.textContent = `Tłumaczenie zdania (${source.name})`;
   els.polishWord.placeholder = `opcjonalnie, np. ${source.code === "pl" ? "dom" : source.name}`;
-  els.englishWord.placeholder = target.code === "en" ? "np. house" : "wpisz slowko";
+  els.englishWord.placeholder = target.code === "en" ? "np. house" : "wpisz słówko";
 }
 
 function simplePolishSentence(pl) {
@@ -228,10 +257,10 @@ function simplePolishSentence(pl) {
   }
 
   if (word.includes(" ")) {
-    return `Ucze sie wyrazenia "${word}".`;
+    return `Uczę się wyrażenia "${word}".`;
   }
 
-  return `Ucze sie slowa "${word}".`;
+  return `Uczę się słowa "${word}".`;
 }
 
 function renderHighlightedText(element, text, word) {
@@ -275,13 +304,13 @@ async function generateAiSentence() {
   els.duplicateNotice.classList.add("hidden");
 
   if (!en) {
-    els.duplicateNotice.textContent = "Wpisz slowko w jezyku, ktorego sie uczysz.";
+    els.duplicateNotice.textContent = "Wpisz słówko w języku, którego się uczysz.";
     els.duplicateNotice.classList.remove("hidden");
     return null;
   }
 
   if (!apiKey) {
-    els.duplicateNotice.textContent = "Wpisz klucz OpenAI API, zeby automatycznie uzupelnic karte.";
+    els.duplicateNotice.textContent = "Wpisz klucz OpenAI API, żeby automatycznie uzupełnić kartę.";
     els.duplicateNotice.classList.remove("hidden");
     return null;
   }
@@ -303,6 +332,9 @@ async function generateAiSentence() {
       },
       body: JSON.stringify({
         model: OPENAI_MODEL,
+        reasoning: {
+          effort: "low"
+        },
         instructions: [
           "Create one very simple example sentence for an Anki vocabulary card.",
           `The learner is studying ${target.apiName} from ${source.apiName}.`,
@@ -323,6 +355,7 @@ async function generateAiSentence() {
           `Target word: ${en}`
         ].join("\n"),
         text: {
+          verbosity: "low",
           format: {
             type: "json_schema",
             name: "anki_sentence",
@@ -351,11 +384,11 @@ async function generateAiSentence() {
     els.polishWord.value = parsed.source_word || pl;
     els.sentence.value = parsed.target_sentence;
     els.translation.value = parsed.source_translation;
-    els.addNotice.textContent = "AI wygenerowalo zdanie.";
+    els.addNotice.textContent = "AI wygenerowało zdanie.";
     els.addNotice.classList.remove("hidden");
     return parsed;
   } catch (error) {
-    els.duplicateNotice.textContent = "Nie udalo sie wygenerowac przez AI. Sprawdz klucz API i internet.";
+    els.duplicateNotice.textContent = "Nie udało się wygenerować przez AI. Sprawdź klucz API i internet.";
     els.duplicateNotice.classList.remove("hidden");
     console.error(error);
     return null;
@@ -376,7 +409,7 @@ async function playSpeech(text, kind, button) {
   }
 
   if (!apiKey) {
-    els.studyNotice.textContent = "Wpisz klucz OpenAI API, zeby odtworzyc audio.";
+    els.studyNotice.textContent = "Wpisz klucz OpenAI API, żeby odtworzyć audio.";
     els.studyNotice.classList.remove("hidden");
     return;
   }
@@ -385,7 +418,7 @@ async function playSpeech(text, kind, button) {
 
   button.disabled = true;
   const originalText = button.textContent;
-  button.textContent = "Laduje...";
+  button.textContent = "Ładuje...";
 
   try {
     const languageName = getLanguage(language).apiName;
@@ -418,7 +451,7 @@ async function playSpeech(text, kind, button) {
     audio.addEventListener("error", () => URL.revokeObjectURL(audioUrl), { once: true });
     await audio.play();
   } catch (error) {
-    els.studyNotice.textContent = "Nie udalo sie odtworzyc audio. Sprawdz klucz API i internet.";
+    els.studyNotice.textContent = "Nie udało się odtworzyć audio. Sprawdź klucz API i internet.";
     els.studyNotice.classList.remove("hidden");
     console.error(error);
   } finally {
@@ -444,19 +477,62 @@ function renderDictionaries() {
 
   const custom = document.createElement("option");
   custom.value = "__new__";
-  custom.textContent = "Nowy slownik...";
+  custom.textContent = "Nowy słownik...";
   els.dictionary.append(custom);
 
   els.dictionary.value = getDictionaries().includes(currentValue) ? currentValue : "Prosty slownik";
+  updateNewDictionaryField();
+  renderCardFilters();
 }
 
-function findDuplicate(pl, en, dictionary) {
+function renderCardFilters() {
+  const currentDictionary = els.cardDictionaryFilter.value || "all";
+  els.cardDictionaryFilter.innerHTML = "";
+
+  const allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.textContent = "Wszystkie słowniki";
+  els.cardDictionaryFilter.append(allOption);
+
+  getDictionaries().forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    els.cardDictionaryFilter.append(option);
+  });
+
+  els.cardDictionaryFilter.value = getDictionaries().includes(currentDictionary) ? currentDictionary : "all";
+}
+
+function updateNewDictionaryField() {
+  const isNew = els.dictionary.value === "__new__";
+  els.newDictionaryField.classList.toggle("hidden", !isNew);
+  if (isNew) {
+    els.newDictionaryName.focus();
+  }
+}
+
+function cardFingerprint(card) {
+  return [
+    normalizeWord(card.dictionary || ""),
+    card.sourceLanguage || "pl",
+    card.targetLanguage || "en",
+    normalizeWord(card.pl || ""),
+    normalizeWord(card.en || "")
+  ].join("|");
+}
+
+function findDuplicate(pl, en, dictionary, excludeId = null) {
   const cleanPl = normalizeWord(pl);
   const cleanEn = normalizeWord(en);
   const sourceLanguage = els.sourceLanguage.value || "pl";
   const targetLanguage = els.targetLanguage.value || "en";
 
   return state.cards.find((card) => {
+    if (card.id === excludeId) {
+      return false;
+    }
+
     const sameDictionary = card.dictionary === dictionary;
     const sameSourceLanguage = (card.sourceLanguage || "pl") === sourceLanguage;
     const sameTargetLanguage = (card.targetLanguage || "en") === targetLanguage;
@@ -468,10 +544,14 @@ function findDuplicate(pl, en, dictionary) {
 
 function updateDuplicateNotice() {
   const dictionary = getSelectedDictionary();
+  if (!dictionary) {
+    return false;
+  }
+
   const duplicate = findDuplicate(els.polishWord.value, els.englishWord.value, dictionary);
 
   if (duplicate && els.englishWord.value.trim()) {
-    els.duplicateNotice.textContent = `To slowko jest juz w bazie: ${duplicate.pl} - ${duplicate.en}.`;
+    els.duplicateNotice.textContent = `To słówko jest już w bazie: ${duplicate.pl} - ${duplicate.en}.`;
     els.duplicateNotice.classList.remove("hidden");
     return true;
   }
@@ -485,18 +565,12 @@ function getSelectedDictionary() {
     return els.dictionary.value;
   }
 
-  const name = prompt("Nazwa nowego slownika:");
-  if (!name || !name.trim()) {
-    els.dictionary.value = "Prosty slownik";
-    return "Prosty slownik";
+  const name = els.newDictionaryName.value.trim();
+  if (!name) {
+    return "";
   }
 
-  const option = document.createElement("option");
-  option.value = name.trim();
-  option.textContent = name.trim();
-  els.dictionary.insertBefore(option, els.dictionary.lastElementChild);
-  els.dictionary.value = name.trim();
-  return name.trim();
+  return name;
 }
 
 function startOfToday() {
@@ -510,6 +584,11 @@ function newCardsStudiedToday() {
   return state.cards.filter((card) => card.firstStudiedAt && card.firstStudiedAt >= today).length;
 }
 
+function cardsReviewedToday() {
+  const today = startOfToday();
+  return state.cards.filter((card) => card.lastReviewedAt && card.lastReviewedAt >= today).length;
+}
+
 function newCardsLeftToday() {
   return Math.max(0, state.settings.newCardsPerDay - newCardsStudiedToday());
 }
@@ -517,10 +596,10 @@ function newCardsLeftToday() {
 function dueCards() {
   const now = Date.now();
   const reviewCards = state.cards
-    .filter((card) => card.reps > 0 && card.dueAt <= now)
+    .filter((card) => !card.suspended && card.reps > 0 && card.dueAt <= now)
     .sort((a, b) => a.dueAt - b.dueAt || a.createdAt - b.createdAt);
   const newCards = state.cards
-    .filter((card) => card.reps === 0 && card.dueAt <= now)
+    .filter((card) => !card.suspended && card.reps === 0 && card.dueAt <= now)
     .sort((a, b) => a.createdAt - b.createdAt)
     .slice(0, newCardsLeftToday());
 
@@ -531,6 +610,7 @@ function renderStats() {
   els.totalCards.textContent = state.cards.length;
   els.dueCards.textContent = dueCards().length;
   els.newCardsLeft.textContent = newCardsLeftToday();
+  els.studiedToday.textContent = cardsReviewedToday();
 }
 
 function pickCard() {
@@ -560,7 +640,7 @@ function renderStudy() {
   els.studyEmpty.classList.add("hidden");
   els.flashcard.classList.remove("hidden");
   els.studyControls.classList.remove("hidden");
-  els.cardDirection.textContent = `${target.name} zdanie -> ${source.name} tlumaczenie`;
+  els.cardDirection.textContent = `${target.name} zdanie → ${source.name} tłumaczenie`;
   els.cardProgress.textContent = `${Math.max(1, due.indexOf(state.current) + 1)}/${due.length}`;
   renderHighlightedText(els.cardPrompt, prompt, state.current.en);
   renderHighlightedText(els.cardAnswer, answer, state.current.pl);
@@ -572,6 +652,7 @@ function renderStudy() {
   els.hardCard.classList.toggle("hidden", !state.answerVisible);
   els.goodCard.classList.toggle("hidden", !state.answerVisible);
   els.easyCard.classList.toggle("hidden", !state.answerVisible);
+  els.suspendCard.classList.toggle("hidden", state.answerVisible);
 }
 
 function intervalForLevel(level) {
@@ -614,12 +695,139 @@ function rateCurrent(grade) {
   renderCards();
 }
 
+function cardStatus(card) {
+  if (card.suspended) {
+    return "suspended";
+  }
+
+  if (card.reps === 0) {
+    return "new";
+  }
+
+  if (card.level >= 6 && card.lapses === 0) {
+    return "mastered";
+  }
+
+  return "learning";
+}
+
+function matchesCardStatus(card, status) {
+  if (status === "all") {
+    return true;
+  }
+
+  if (status === "due") {
+    return !card.suspended && card.dueAt <= Date.now();
+  }
+
+  return cardStatus(card) === status;
+}
+
+function formatLocalDateTime(timestamp) {
+  const date = new Date(timestamp);
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function deleteCard(card) {
+  if (!confirm(`Usunąć kartę "${card.en} - ${card.pl}"?`)) {
+    return;
+  }
+
+  state.cards = state.cards.filter((item) => item.id !== card.id);
+  saveCards();
+  if (state.current?.id === card.id) {
+    pickCard();
+  }
+  renderAll();
+  showCardsNotice("Karta została usunięta.");
+}
+
+function toggleSuspended(card) {
+  card.suspended = !card.suspended;
+  saveCards();
+  if (state.current?.id === card.id && card.suspended) {
+    pickCard();
+  }
+  renderAll();
+  showCardsNotice(card.suspended ? "Karta została wstrzymana." : "Karta wróciła do nauki.");
+}
+
+function openEditDialog(card) {
+  state.editingCardId = card.id;
+  els.editDictionary.value = card.dictionary || "Prosty slownik";
+  els.editSourceWord.value = card.pl || "";
+  els.editTargetWord.value = card.en || "";
+  els.editSentence.value = card.sentence || "";
+  els.editTranslation.value = card.translation || "";
+  els.editDueAt.value = formatLocalDateTime(card.dueAt || Date.now());
+  els.editSuspended.checked = Boolean(card.suspended);
+  els.editNotice.classList.add("hidden");
+  els.editDialog.showModal();
+}
+
+function hasDuplicateCardData(card, excludeId) {
+  const fingerprint = cardFingerprint(card);
+  return state.cards.some((item) => item.id !== excludeId && cardFingerprint(item) === fingerprint);
+}
+
+function saveEditedCard() {
+  const card = state.cards.find((item) => item.id === state.editingCardId);
+  if (!card) {
+    return;
+  }
+
+  const next = {
+    ...card,
+    dictionary: els.editDictionary.value.trim() || "Prosty slownik",
+    pl: els.editSourceWord.value.trim(),
+    en: els.editTargetWord.value.trim(),
+    sentence: els.editSentence.value.trim(),
+    translation: els.editTranslation.value.trim(),
+    dueAt: els.editDueAt.value ? new Date(els.editDueAt.value).getTime() : card.dueAt,
+    suspended: els.editSuspended.checked
+  };
+
+  if (!next.pl || !next.en || !next.sentence || !next.translation) {
+    els.editNotice.textContent = "Uzupełnij wszystkie pola karty.";
+    els.editNotice.classList.remove("hidden");
+    return;
+  }
+
+  if (!Number.isFinite(next.dueAt)) {
+    els.editNotice.textContent = "Podaj poprawną datę następnej powtórki.";
+    els.editNotice.classList.remove("hidden");
+    return;
+  }
+
+  if (hasDuplicateCardData(next, card.id)) {
+    els.editNotice.textContent = "Taka karta już istnieje w tym słowniku.";
+    els.editNotice.classList.remove("hidden");
+    return;
+  }
+
+  Object.assign(card, next);
+  saveCards();
+  if (state.current?.id === card.id) {
+    state.current = card.suspended ? null : card;
+  }
+  els.editDialog.close();
+  state.editingCardId = null;
+  pickCard();
+  renderAll();
+  showCardsNotice("Karta została zaktualizowana.");
+}
+
 function renderCards() {
   els.newCardsLimit.value = state.settings.newCardsPerDay;
   const query = normalizeWord(els.searchCards.value);
+  const dictionaryFilter = els.cardDictionaryFilter.value || "all";
+  const statusFilter = els.cardStatusFilter.value || "all";
   const cards = state.cards.filter((card) => {
     const haystack = `${card.pl} ${card.en} ${card.sentence} ${card.translation || ""} ${card.dictionary}`.toLocaleLowerCase();
-    return haystack.includes(query);
+    const matchesQuery = haystack.includes(query);
+    const matchesDictionary = dictionaryFilter === "all" || card.dictionary === dictionaryFilter;
+    return matchesQuery && matchesDictionary && matchesCardStatus(card, statusFilter);
   });
 
   els.cardsList.innerHTML = "";
@@ -635,42 +843,63 @@ function renderCards() {
   cards.forEach((card) => {
     const row = document.createElement("article");
     row.className = "word-card";
+    if (card.suspended) {
+      row.classList.add("suspended");
+    }
 
     const text = document.createElement("div");
     const title = document.createElement("strong");
     const sentence = document.createElement("p");
+    const meta = document.createElement("p");
     const source = getLanguage(card.sourceLanguage || "pl");
     const target = getLanguage(card.targetLanguage || "en");
     title.textContent = `${card.pl} - ${card.en}`;
-    const languageText = `${source.name} -> ${target.name}`;
+    const languageText = `${source.name} → ${target.name}`;
     const dueText = new Date(card.dueAt).toLocaleString("pl-PL", {
       day: "2-digit",
       month: "2-digit",
       hour: "2-digit",
       minute: "2-digit"
     });
-    sentence.textContent = `${card.dictionary} (${languageText}): ${card.sentence} / ${card.translation || simplePolishSentence(card.pl)} | powtorki: ${card.reps}, pomylki: ${card.lapses}, nastepna: ${dueText}`;
-    text.append(title, sentence);
+    const statusText = {
+      new: "nowa",
+      learning: "w trakcie",
+      mastered: "opanowana",
+      suspended: "wstrzymana"
+    }[cardStatus(card)];
+    sentence.textContent = `${card.sentence} / ${card.translation || simplePolishSentence(card.pl)}`;
+    meta.textContent = `${card.dictionary} (${languageText}) | status: ${statusText} | powtórki: ${card.reps}, pomyłki: ${card.lapses}, następna: ${dueText}`;
+    text.append(title, sentence, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "secondary compact";
+    edit.dataset.icon = "✎";
+    edit.textContent = "Edytuj";
+    edit.addEventListener("click", () => openEditDialog(card));
+
+    const suspend = document.createElement("button");
+    suspend.type = "button";
+    suspend.className = "subtle compact";
+    suspend.dataset.icon = card.suspended ? "▶" : "⏸";
+    suspend.textContent = card.suspended ? "Wznów" : "Wstrzymaj";
+    suspend.addEventListener("click", () => toggleSuspended(card));
 
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "danger compact";
     remove.dataset.icon = "×";
-    remove.textContent = "Usun";
-    remove.addEventListener("click", () => {
-      state.cards = state.cards.filter((item) => item.id !== card.id);
-      saveCards();
-      if (state.current?.id === card.id) {
-        pickCard();
-      }
-      renderAll();
-    });
+    remove.textContent = "Usuń";
+    remove.addEventListener("click", () => deleteCard(card));
 
-    row.append(text, remove);
+    actions.append(edit, suspend, remove);
+    row.append(text, actions);
     els.cardsList.append(row);
   });
 }
-
 function exportCards() {
   const payload = {
     exportedAt: new Date().toISOString(),
@@ -693,6 +922,33 @@ function showCardsNotice(message) {
   els.cardsNotice.className = "success";
 }
 
+function validateImportedCard(card, index) {
+  const normalized = normalizeCard(card);
+  const missing = [];
+
+  if (!normalized.pl) {
+    missing.push("tłumaczenie");
+  }
+
+  if (!normalized.en) {
+    missing.push("słówko");
+  }
+
+  if (!normalized.sentence) {
+    missing.push("zdanie");
+  }
+
+  if (!normalized.translation) {
+    missing.push("tłumaczenie zdania");
+  }
+
+  if (missing.length) {
+    throw new Error(`Karta ${index + 1} nie ma pól: ${missing.join(", ")}.`);
+  }
+
+  return normalized;
+}
+
 function importCardsFromJson(text) {
   const parsed = JSON.parse(text);
   const importedCards = Array.isArray(parsed) ? parsed : parsed.cards;
@@ -701,13 +957,37 @@ function importCardsFromJson(text) {
     throw new Error("Nie znaleziono listy kart.");
   }
 
-  const existingIds = new Set(state.cards.map((card) => card.id));
-  const cards = importedCards.map((card) => normalizeCard({
-    ...card,
-    id: card.id && !existingIds.has(card.id) ? card.id : crypto.randomUUID()
-  }));
+  if (els.importMode.value === "replace" && !confirm("Zastąpić wszystkie obecne karty importowanym plikiem?")) {
+    showCardsNotice("Import anulowany.");
+    return;
+  }
 
-  state.cards = [...cards, ...state.cards];
+  const importMode = els.importMode.value || "merge";
+  const existingIds = new Set(state.cards.map((card) => card.id));
+  const usedIds = new Set(importMode === "replace" ? [] : existingIds);
+  const existingFingerprints = new Set(state.cards.map(cardFingerprint));
+  const seenFingerprints = new Set();
+  const cards = [];
+  let skipped = 0;
+
+  importedCards.forEach((card, index) => {
+    const normalized = validateImportedCard({
+    ...card,
+    id: card.id && !usedIds.has(card.id) ? card.id : crypto.randomUUID()
+    }, index);
+    usedIds.add(normalized.id);
+    const fingerprint = cardFingerprint(normalized);
+
+    if (seenFingerprints.has(fingerprint) || (importMode === "merge" && existingFingerprints.has(fingerprint))) {
+      skipped += 1;
+      return;
+    }
+
+    seenFingerprints.add(fingerprint);
+    cards.push(normalized);
+  });
+
+  state.cards = importMode === "replace" ? cards : [...cards, ...state.cards];
   if (parsed.settings) {
     state.settings = normalizeSettings(parsed.settings);
     saveSettings();
@@ -715,7 +995,7 @@ function importCardsFromJson(text) {
   saveCards();
   pickCard();
   renderAll();
-  showCardsNotice(`Zaimportowano kart: ${cards.length}.`);
+  showCardsNotice(`Zaimportowano kart: ${cards.length}. Pominięto duplikatów: ${skipped}.`);
 }
 
 function renderAll() {
@@ -736,9 +1016,11 @@ els.tabs.forEach((tab) => {
 });
 
 els.dictionary.addEventListener("change", () => {
-  getSelectedDictionary();
+  updateNewDictionaryField();
   updateDuplicateNotice();
 });
+
+els.newDictionaryName.addEventListener("input", updateDuplicateNotice);
 
 els.englishWord.addEventListener("input", () => {
   updateDuplicateNotice();
@@ -773,14 +1055,20 @@ els.addForm.addEventListener("submit", async (event) => {
 
   els.addNotice.classList.add("hidden");
 
+  if (!dictionary) {
+    els.duplicateNotice.textContent = "Wpisz nazwę nowego słownika.";
+    els.duplicateNotice.classList.remove("hidden");
+    return;
+  }
+
   if (duplicate) {
-    els.duplicateNotice.textContent = `Nie dodano. Ta karta juz istnieje: ${duplicate.pl} - ${duplicate.en}.`;
+    els.duplicateNotice.textContent = `Nie dodano. Ta karta już istnieje: ${duplicate.pl} - ${duplicate.en}.`;
     els.duplicateNotice.classList.remove("hidden");
     return;
   }
 
   if (!en) {
-    els.duplicateNotice.textContent = "Wpisz slowko w jezyku, ktorego sie uczysz.";
+    els.duplicateNotice.textContent = "Wpisz słówko w języku, którego się uczysz.";
     els.duplicateNotice.classList.remove("hidden");
     return;
   }
@@ -809,20 +1097,24 @@ els.addForm.addEventListener("submit", async (event) => {
     dueAt: Date.now(),
     createdAt: Date.now(),
     firstStudiedAt: null,
-    lastReviewedAt: null
+    lastReviewedAt: null,
+    suspended: false
   });
 
   saveCards();
-  els.addNotice.textContent = `Dodano karte: ${pl} - ${en}.`;
+  els.addNotice.textContent = `Dodano kartę: ${pl} - ${en}.`;
   els.addNotice.classList.remove("hidden");
   els.duplicateNotice.classList.add("hidden");
   els.addForm.reset();
   els.dictionary.value = dictionary;
+  els.newDictionaryName.value = "";
   els.sourceLanguage.value = sourceLanguage;
   els.targetLanguage.value = targetLanguage;
   updateLanguageLabels();
   pickCard();
   renderAll();
+  els.dictionary.value = dictionary;
+  updateNewDictionaryField();
 });
 
 els.clearForm.addEventListener("click", () => {
@@ -830,8 +1122,10 @@ els.clearForm.addEventListener("click", () => {
   els.duplicateNotice.classList.add("hidden");
   els.addNotice.classList.add("hidden");
   els.dictionary.value = "Prosty slownik";
+  els.newDictionaryName.value = "";
   els.sourceLanguage.value = "pl";
   els.targetLanguage.value = "en";
+  updateNewDictionaryField();
   updateLanguageLabels();
 });
 
@@ -848,11 +1142,19 @@ els.playSentence.addEventListener("click", () => {
   playSpeech(state.current?.sentence || "", "sentence", els.playSentence);
 });
 
+els.suspendCard.addEventListener("click", () => {
+  if (state.current) {
+    toggleSuspended(state.current);
+  }
+});
+
 els.againCard.addEventListener("click", () => rateCurrent("again"));
 els.hardCard.addEventListener("click", () => rateCurrent("hard"));
 els.goodCard.addEventListener("click", () => rateCurrent("good"));
 els.easyCard.addEventListener("click", () => rateCurrent("easy"));
 els.searchCards.addEventListener("input", renderCards);
+els.cardDictionaryFilter.addEventListener("change", renderCards);
+els.cardStatusFilter.addEventListener("change", renderCards);
 els.newCardsLimit.addEventListener("change", () => {
   state.settings = normalizeSettings({ newCardsPerDay: els.newCardsLimit.value });
   saveSettings();
@@ -871,10 +1173,20 @@ els.importFile.addEventListener("change", async () => {
   try {
     importCardsFromJson(await file.text());
   } catch (error) {
-    els.cardsNotice.textContent = `Nie udalo sie zaimportowac: ${error.message}`;
+    els.cardsNotice.textContent = `Nie udało się zaimportować: ${error.message}`;
     els.cardsNotice.className = "notice";
     console.error(error);
   }
+});
+
+els.editForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveEditedCard();
+});
+
+els.cancelEdit.addEventListener("click", () => {
+  els.editDialog.close();
+  state.editingCardId = null;
 });
 
 els.themeToggle.addEventListener("click", () => {
@@ -888,6 +1200,11 @@ els.flashcard.addEventListener("click", () => {
 });
 
 document.addEventListener("keydown", (event) => {
+  const interactiveTag = ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(event.target.tagName);
+  if (interactiveTag || els.editDialog.open) {
+    return;
+  }
+
   if (!state.current) {
     return;
   }
