@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mini Anki</title>
+    <link rel="icon" type="image/svg+xml" href="app-icon.svg">
     <script>
       try {
         if (localStorage.getItem("mini-anki-theme-v1") === "dark") {
@@ -16,9 +17,12 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div>
-          <h1>Mini Anki</h1>
-          <p>Proste fiszki do słówek po polsku i angielsku.</p>
+        <div class="brand">
+          <img class="app-icon" src="app-icon.svg" alt="" width="48" height="48">
+          <div>
+            <h1>Mini Anki</h1>
+            <p>Proste fiszki do słówek po polsku i angielsku.</p>
+          </div>
         </div>
         <div class="topbar-actions">
           <button id="themeToggle" class="theme-toggle subtle" type="button" aria-pressed="false" data-icon="◐">Ciemny motyw</button>

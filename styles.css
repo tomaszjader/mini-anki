@@ -203,6 +203,18 @@ button.compact {
   margin-bottom: 18px;
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-icon {
+  flex: 0 0 auto;
+  border-radius: 12px;
+  box-shadow: var(--button-shadow);
+}
+
 h1,
 h2,
 p {
@@ -558,6 +570,10 @@ textarea {
   .topbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .brand {
+    align-items: flex-start;
   }
 
   .topbar-actions {

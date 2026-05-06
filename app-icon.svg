@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Mini Anki</title>
+  <desc id="desc">Stylized flashcards with a study star.</desc>
+  <rect width="128" height="128" rx="28" fill="#174a3d"/>
+  <path d="M34 27h47c8 0 14 6 14 14v50c0 8-6 14-14 14H34c-8 0-14-6-14-14V41c0-8 6-14 14-14Z" fill="#e7f4ef"/>
+  <path d="M47 18h47c8 0 14 6 14 14v50c0 8-6 14-14 14H47c-8 0-14-6-14-14V32c0-8 6-14 14-14Z" fill="#ffffff"/>
+  <path d="M49 42h32" stroke="#256f5b" stroke-width="8" stroke-linecap="round"/>
+  <path d="M49 62h45" stroke="#74aef0" stroke-width="8" stroke-linecap="round"/>
+  <path d="M49 82h24" stroke="#256f5b" stroke-width="8" stroke-linecap="round"/>
+  <path d="m92 74 4.5 9.1 10 1.5-7.2 7 1.7 9.9-9-4.7-9 4.7 1.7-9.9-7.2-7 10-1.5L92 74Z" fill="#f1d36d"/>
+</svg>
