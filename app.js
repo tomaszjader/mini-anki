@@ -2,6 +2,7 @@ const STORAGE_KEY = "mini-anki-cards-v1";
 const API_KEY_STORAGE_KEY = "mini-anki-openai-key-v1";
 const SETTINGS_KEY = "mini-anki-settings-v1";
 const THEME_STORAGE_KEY = "mini-anki-theme-v1";
+const UI_LANGUAGE_STORAGE_KEY = "mini-anki-ui-language-v1";
 const OPENAI_MODEL = "gpt-5.5";
 const TTS_MODEL = "gpt-4o-mini-tts";
 const TTS_VOICE = "coral";
@@ -11,23 +12,264 @@ const defaultSettings = {
 };
 
 const languageOptions = [
-  { code: "pl", name: "polski", apiName: "Polish" },
-  { code: "en", name: "angielski", apiName: "English" },
-  { code: "de", name: "niemiecki", apiName: "German" },
-  { code: "es", name: "hiszpanski", apiName: "Spanish" },
-  { code: "fr", name: "francuski", apiName: "French" },
-  { code: "it", name: "wloski", apiName: "Italian" },
-  { code: "pt", name: "portugalski", apiName: "Portuguese" },
-  { code: "uk", name: "ukrainski", apiName: "Ukrainian" },
-  { code: "ru", name: "rosyjski", apiName: "Russian" },
-  { code: "cs", name: "czeski", apiName: "Czech" },
-  { code: "sv", name: "szwedzki", apiName: "Swedish" },
-  { code: "no", name: "norweski", apiName: "Norwegian" },
-  { code: "nl", name: "niderlandzki", apiName: "Dutch" },
-  { code: "ja", name: "japonski", apiName: "Japanese" },
-  { code: "ko", name: "koreanski", apiName: "Korean" },
-  { code: "zh", name: "chinski", apiName: "Chinese" }
+  { code: "pl", names: { pl: "polski", en: "Polish" }, apiName: "Polish" },
+  { code: "en", names: { pl: "angielski", en: "English" }, apiName: "English" },
+  { code: "de", names: { pl: "niemiecki", en: "German" }, apiName: "German" },
+  { code: "es", names: { pl: "hiszpański", en: "Spanish" }, apiName: "Spanish" },
+  { code: "fr", names: { pl: "francuski", en: "French" }, apiName: "French" },
+  { code: "it", names: { pl: "włoski", en: "Italian" }, apiName: "Italian" },
+  { code: "pt", names: { pl: "portugalski", en: "Portuguese" }, apiName: "Portuguese" },
+  { code: "uk", names: { pl: "ukraiński", en: "Ukrainian" }, apiName: "Ukrainian" },
+  { code: "ru", names: { pl: "rosyjski", en: "Russian" }, apiName: "Russian" },
+  { code: "cs", names: { pl: "czeski", en: "Czech" }, apiName: "Czech" },
+  { code: "sv", names: { pl: "szwedzki", en: "Swedish" }, apiName: "Swedish" },
+  { code: "no", names: { pl: "norweski", en: "Norwegian" }, apiName: "Norwegian" },
+  { code: "nl", names: { pl: "niderlandzki", en: "Dutch" }, apiName: "Dutch" },
+  { code: "ja", names: { pl: "japoński", en: "Japanese" }, apiName: "Japanese" },
+  { code: "ko", names: { pl: "koreański", en: "Korean" }, apiName: "Korean" },
+  { code: "zh", names: { pl: "chiński", en: "Chinese" }, apiName: "Chinese" }
 ];
+
+const translations = {
+  pl: {
+    appSubtitle: "Proste fiszki do słówek po polsku i angielsku.",
+    uiLanguage: "Język",
+    polishUi: "Polski",
+    englishUi: "Angielski",
+    darkTheme: "Ciemny motyw",
+    lightTheme: "Jasny motyw",
+    statsAria: "Statystyki",
+    totalCardsLabel: "kart",
+    dueCardsLabel: "do nauki",
+    newCardsLeftLabel: "nowych dziś",
+    studiedTodayLabel: "dziś",
+    workspaceAria: "Aplikacja fiszek",
+    tabsAria: "Widoki",
+    studyTab: "Nauka",
+    addTab: "Dodaj",
+    cardsTab: "Karty",
+    studyViewAria: "Nauka",
+    addViewAria: "Dodawanie słówek",
+    cardsViewAria: "Lista kart",
+    noDueTitle: "Nie ma kart do powtórki",
+    noDueText: "Dodaj słówko albo wróć później, gdy karta będzie gotowa do nauki.",
+    playWord: "Odtwórz słowo",
+    playSentence: "Odtwórz zdanie",
+    showAnswer: "Pokaż odpowiedź",
+    again: "Jeszcze raz",
+    hard: "Trudna",
+    good: "Umiem",
+    easy: "Łatwa",
+    suspend: "Wstrzymaj",
+    dictionary: "Słownik",
+    newDictionaryName: "Nazwa nowego słownika",
+    knownLanguage: "Znam",
+    learningLanguage: "Uczę się",
+    apiKey: "Klucz OpenAI API",
+    apiKeyHelp: "Klucz jest zapisany tylko w tej przeglądarce. Do prywatnej lokalnej nauki.",
+    generateAi: "Generuj AI",
+    addCard: "Dodaj kartę",
+    clear: "Wyczyść",
+    searchPlaceholder: "Szukaj słówka",
+    dictionaryFilterAria: "Filtr słownika",
+    statusFilterAria: "Filtr statusu",
+    all: "Wszystkie",
+    due: "Do nauki",
+    new: "Nowe",
+    learning: "W trakcie",
+    mastered: "Opanowane",
+    suspended: "Wstrzymane",
+    newPerDay: "Nowe/dzień",
+    importModeAria: "Tryb importu",
+    importMerge: "Import: połącz",
+    importReplace: "Import: zastąp",
+    export: "Eksport",
+    import: "Import",
+    editCard: "Edytuj kartę",
+    word: "Słówko",
+    translation: "Tłumaczenie",
+    nextReview: "Następna powtórka",
+    sentence: "Zdanie",
+    sentenceTranslation: "Tłumaczenie zdania",
+    suspendCard: "Wstrzymaj kartę",
+    save: "Zapisz",
+    cancel: "Anuluj",
+    newDictionaryOption: "Nowy słownik...",
+    allDictionaries: "Wszystkie słowniki",
+    sourceWordLabel: "Tłumaczenie ({language})",
+    targetWordLabel: "Słówko ({language})",
+    sentenceLabel: "Zdanie ({language})",
+    translationLabel: "Tłumaczenie zdania ({language})",
+    sourcePlaceholder: "opcjonalnie, np. {example}",
+    targetPlaceholder: "np. house",
+    targetPlaceholderGeneric: "wpisz słówko",
+    sentencePlaceholder: "Kliknij Generuj AI albo dodaj kartę z zapisanym kluczem",
+    translationPlaceholder: "Opcjonalne, AI uzupełni automatycznie",
+    newDictionaryPlaceholder: "np. Hiszpański A1",
+    direction: "{target} zdanie → {source} tłumaczenie",
+    status: "status",
+    reviews: "powtórki",
+    lapses: "pomyłki",
+    next: "następna",
+    statusNew: "nowa",
+    statusLearning: "w trakcie",
+    statusMastered: "opanowana",
+    statusSuspended: "wstrzymana",
+    edit: "Edytuj",
+    resume: "Wznów",
+    remove: "Usuń",
+    noCards: "Brak kart.",
+    missingSource: "tłumaczenie",
+    missingTarget: "słówko",
+    missingSentence: "zdanie",
+    missingSentenceTranslation: "tłumaczenie zdania",
+    enterTargetWord: "Wpisz słówko w języku, którego się uczysz.",
+    enterApiKeyFill: "Wpisz klucz OpenAI API, żeby automatycznie uzupełnić kartę.",
+    generating: "Generuje...",
+    aiGenerated: "AI wygenerowało zdanie.",
+    aiGenerateFailed: "Nie udało się wygenerować przez AI. Sprawdź klucz API i internet.",
+    enterApiKeyAudio: "Wpisz klucz OpenAI API, żeby odtworzyć audio.",
+    loading: "Ładuje...",
+    audioFailed: "Nie udało się odtworzyć audio. Sprawdź klucz API i internet.",
+    duplicateFound: "To słówko jest już w bazie: {source} - {target}.",
+    deleteConfirm: "Usunąć kartę \"{target} - {source}\"?",
+    cardDeleted: "Karta została usunięta.",
+    cardSuspended: "Karta została wstrzymana.",
+    cardResumed: "Karta wróciła do nauki.",
+    fillAllCardFields: "Uzupełnij wszystkie pola karty.",
+    invalidDueDate: "Podaj poprawną datę następnej powtórki.",
+    duplicateCard: "Taka karta już istnieje w tym słowniku.",
+    cardUpdated: "Karta została zaktualizowana.",
+    importedCardMissingFields: "Karta {number} nie ma pól: {fields}.",
+    noCardsListInFile: "Nie znaleziono listy kart.",
+    replaceConfirm: "Zastąpić wszystkie obecne karty importowanym plikiem?",
+    importCancelled: "Import anulowany.",
+    importDone: "Zaimportowano kart: {count}. Pominięto duplikatów: {skipped}.",
+    enterDictionaryName: "Wpisz nazwę nowego słownika.",
+    addDuplicate: "Nie dodano. Ta karta już istnieje: {source} - {target}.",
+    cardAdded: "Dodano kartę: {source} - {target}.",
+    importFailed: "Nie udało się zaimportować: {message}"
+  },
+  en: {
+    appSubtitle: "Simple vocabulary flashcards in Polish and English.",
+    uiLanguage: "Language",
+    polishUi: "Polish",
+    englishUi: "English",
+    darkTheme: "Dark theme",
+    lightTheme: "Light theme",
+    statsAria: "Statistics",
+    totalCardsLabel: "cards",
+    dueCardsLabel: "due",
+    newCardsLeftLabel: "new today",
+    studiedTodayLabel: "today",
+    workspaceAria: "Flashcard app",
+    tabsAria: "Views",
+    studyTab: "Study",
+    addTab: "Add",
+    cardsTab: "Cards",
+    studyViewAria: "Study",
+    addViewAria: "Add vocabulary",
+    cardsViewAria: "Card list",
+    noDueTitle: "No cards due",
+    noDueText: "Add a word or come back later when a card is ready to study.",
+    playWord: "Play word",
+    playSentence: "Play sentence",
+    showAnswer: "Show answer",
+    again: "Again",
+    hard: "Hard",
+    good: "Good",
+    easy: "Easy",
+    suspend: "Suspend",
+    dictionary: "Dictionary",
+    newDictionaryName: "New dictionary name",
+    knownLanguage: "I know",
+    learningLanguage: "I am learning",
+    apiKey: "OpenAI API key",
+    apiKeyHelp: "The key is saved only in this browser. For private local study.",
+    generateAi: "Generate AI",
+    addCard: "Add card",
+    clear: "Clear",
+    searchPlaceholder: "Search words",
+    dictionaryFilterAria: "Dictionary filter",
+    statusFilterAria: "Status filter",
+    all: "All",
+    due: "Due",
+    new: "New",
+    learning: "Learning",
+    mastered: "Mastered",
+    suspended: "Suspended",
+    newPerDay: "New/day",
+    importModeAria: "Import mode",
+    importMerge: "Import: merge",
+    importReplace: "Import: replace",
+    export: "Export",
+    import: "Import",
+    editCard: "Edit card",
+    word: "Word",
+    translation: "Translation",
+    nextReview: "Next review",
+    sentence: "Sentence",
+    sentenceTranslation: "Sentence translation",
+    suspendCard: "Suspend card",
+    save: "Save",
+    cancel: "Cancel",
+    newDictionaryOption: "New dictionary...",
+    allDictionaries: "All dictionaries",
+    sourceWordLabel: "Translation ({language})",
+    targetWordLabel: "Word ({language})",
+    sentenceLabel: "Sentence ({language})",
+    translationLabel: "Sentence translation ({language})",
+    sourcePlaceholder: "optional, e.g. {example}",
+    targetPlaceholder: "e.g. house",
+    targetPlaceholderGeneric: "enter a word",
+    sentencePlaceholder: "Click Generate AI or add a card with a saved key",
+    translationPlaceholder: "Optional, AI will fill it automatically",
+    newDictionaryPlaceholder: "e.g. Spanish A1",
+    direction: "{target} sentence → {source} translation",
+    status: "status",
+    reviews: "reviews",
+    lapses: "misses",
+    next: "next",
+    statusNew: "new",
+    statusLearning: "learning",
+    statusMastered: "mastered",
+    statusSuspended: "suspended",
+    edit: "Edit",
+    resume: "Resume",
+    remove: "Delete",
+    noCards: "No cards.",
+    missingSource: "translation",
+    missingTarget: "word",
+    missingSentence: "sentence",
+    missingSentenceTranslation: "sentence translation",
+    enterTargetWord: "Enter a word in the language you are learning.",
+    enterApiKeyFill: "Enter your OpenAI API key to fill the card automatically.",
+    generating: "Generating...",
+    aiGenerated: "AI generated a sentence.",
+    aiGenerateFailed: "AI generation failed. Check your API key and internet connection.",
+    enterApiKeyAudio: "Enter your OpenAI API key to play audio.",
+    loading: "Loading...",
+    audioFailed: "Could not play audio. Check your API key and internet connection.",
+    duplicateFound: "This word is already saved: {source} - {target}.",
+    deleteConfirm: "Delete card \"{target} - {source}\"?",
+    cardDeleted: "Card deleted.",
+    cardSuspended: "Card suspended.",
+    cardResumed: "Card returned to study.",
+    fillAllCardFields: "Fill in all card fields.",
+    invalidDueDate: "Enter a valid next review date.",
+    duplicateCard: "This card already exists in this dictionary.",
+    cardUpdated: "Card updated.",
+    importedCardMissingFields: "Card {number} is missing fields: {fields}.",
+    noCardsListInFile: "No card list found.",
+    replaceConfirm: "Replace all current cards with the imported file?",
+    importCancelled: "Import cancelled.",
+    importDone: "Imported cards: {count}. Skipped duplicates: {skipped}.",
+    enterDictionaryName: "Enter the new dictionary name.",
+    addDuplicate: "Not added. This card already exists: {source} - {target}.",
+    cardAdded: "Added card: {source} - {target}.",
+    importFailed: "Import failed: {message}"
+  }
+};
 
 const reviewIntervals = [
   5,
@@ -44,6 +286,7 @@ const reviewIntervals = [
 const state = {
   cards: loadCards(),
   settings: loadSettings(),
+  uiLanguage: loadUiLanguage(),
   current: null,
   answerVisible: false,
   editingCardId: null
@@ -103,6 +346,7 @@ const els = {
   importFile: document.querySelector("#importFile"),
   cardsNotice: document.querySelector("#cardsNotice"),
   themeToggle: document.querySelector("#themeToggle"),
+  uiLanguage: document.querySelector("#uiLanguage"),
   editDialog: document.querySelector("#editDialog"),
   editForm: document.querySelector("#editForm"),
   editDictionary: document.querySelector("#editDictionary"),
@@ -116,6 +360,122 @@ const els = {
   cancelEdit: document.querySelector("#cancelEdit")
 };
 
+function loadUiLanguage() {
+  const saved = localStorage.getItem(UI_LANGUAGE_STORAGE_KEY);
+  return saved === "en" ? "en" : "pl";
+}
+
+function t(key, params = {}) {
+  const template = translations[state.uiLanguage]?.[key] || translations.pl[key] || key;
+  return Object.entries(params).reduce(
+    (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+    template
+  );
+}
+
+function getLanguageName(language) {
+  return language.names?.[state.uiLanguage] || language.apiName;
+}
+
+function setText(selector, key) {
+  const element = document.querySelector(selector);
+  if (element) {
+    element.textContent = t(key);
+  }
+}
+
+function setPlaceholder(selector, key) {
+  const element = document.querySelector(selector);
+  if (element) {
+    element.placeholder = t(key);
+  }
+}
+
+function setAriaLabel(selector, key) {
+  const element = document.querySelector(selector);
+  if (element) {
+    element.setAttribute("aria-label", t(key));
+  }
+}
+
+function applyUiLanguage() {
+  document.documentElement.lang = state.uiLanguage;
+  els.uiLanguage.value = state.uiLanguage;
+  els.uiLanguage.querySelector('[value="pl"]').textContent = t("polishUi");
+  els.uiLanguage.querySelector('[value="en"]').textContent = t("englishUi");
+  document.title = "Mini Anki";
+
+  setText(".brand p", "appSubtitle");
+  setText("#uiLanguageLabel", "uiLanguage");
+  setText("#totalCardsLabel", "totalCardsLabel");
+  setText("#dueCardsLabel", "dueCardsLabel");
+  setText("#newCardsLeftLabel", "newCardsLeftLabel");
+  setText("#studiedTodayLabel", "studiedTodayLabel");
+  setAriaLabel(".stats", "statsAria");
+  setAriaLabel(".workspace", "workspaceAria");
+  setAriaLabel(".tabs", "tabsAria");
+  setText('[data-view="studyView"]', "studyTab");
+  setText('[data-view="addView"]', "addTab");
+  setText('[data-view="cardsView"]', "cardsTab");
+  setAriaLabel("#studyView", "studyViewAria");
+  setAriaLabel("#addView", "addViewAria");
+  setAriaLabel("#cardsView", "cardsViewAria");
+  setText("#studyEmpty h2", "noDueTitle");
+  setText("#studyEmpty p", "noDueText");
+  setText("#playWord", "playWord");
+  setText("#playSentence", "playSentence");
+  setText("#showAnswer", "showAnswer");
+  setText("#againCard", "again");
+  setText("#hardCard", "hard");
+  setText("#goodCard", "good");
+  setText("#easyCard", "easy");
+  setText("#suspendCard", "suspend");
+  setText('label[for="dictionary"]', "dictionary");
+  setText('label[for="newDictionaryName"]', "newDictionaryName");
+  setText('label[for="sourceLanguage"]', "knownLanguage");
+  setText('label[for="targetLanguage"]', "learningLanguage");
+  setText('label[for="apiKey"]', "apiKey");
+  setText(".ai-field small", "apiKeyHelp");
+  setText("#generateAi", "generateAi");
+  setText('#addForm button[type="submit"]', "addCard");
+  setText("#clearForm", "clear");
+  setPlaceholder("#newDictionaryName", "newDictionaryPlaceholder");
+  setPlaceholder("#sentence", "sentencePlaceholder");
+  setPlaceholder("#translation", "translationPlaceholder");
+  setPlaceholder("#searchCards", "searchPlaceholder");
+  setAriaLabel("#cardDictionaryFilter", "dictionaryFilterAria");
+  setAriaLabel("#cardStatusFilter", "statusFilterAria");
+  setAriaLabel("#importMode", "importModeAria");
+  setText("#newCardsLimitLabel", "newPerDay");
+  setText("#exportCards", "export");
+  setText("#importCards", "import");
+  setText("#editDialog h2", "editCard");
+  setText('label[for="editDictionary"]', "dictionary");
+  setText('label[for="editTargetWord"]', "word");
+  setText('label[for="editSourceWord"]', "translation");
+  setText('label[for="editDueAt"]', "nextReview");
+  setText('label[for="editSentence"]', "sentence");
+  setText('label[for="editTranslation"]', "sentenceTranslation");
+  setText("#editSuspendedLabel", "suspendCard");
+  setText('#editForm button[type="submit"]', "save");
+  setText("#cancelEdit", "cancel");
+
+  const statusLabels = ["all", "due", "new", "learning", "mastered", "suspended"];
+  [...els.cardStatusFilter.options].forEach((option, index) => {
+    option.textContent = t(statusLabels[index]);
+  });
+  [...els.importMode.options].forEach((option) => {
+    option.textContent = t(option.value === "replace" ? "importReplace" : "importMerge");
+  });
+
+  applyTheme(loadTheme());
+  renderLanguageOptions(false);
+  renderDictionaries();
+  updateLanguageLabels();
+  renderStudy();
+  renderCards();
+}
+
 function loadTheme() {
   const saved = localStorage.getItem(THEME_STORAGE_KEY);
   return saved === "dark" ? "dark" : "light";
@@ -123,7 +483,7 @@ function loadTheme() {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  els.themeToggle.textContent = theme === "dark" ? "Jasny motyw" : "Ciemny motyw";
+  els.themeToggle.textContent = theme === "dark" ? t("lightTheme") : t("darkTheme");
   els.themeToggle.dataset.icon = theme === "dark" ? "☼" : "◐";
   els.themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
 }
@@ -223,31 +583,39 @@ function extractOutputText(response) {
     .trim();
 }
 
-function renderLanguageOptions() {
+function renderLanguageOptions(resetValues = true) {
+  const sourceValue = resetValues ? "pl" : els.sourceLanguage.value || "pl";
+  const targetValue = resetValues ? "en" : els.targetLanguage.value || "en";
+
   [els.sourceLanguage, els.targetLanguage].forEach((select) => {
     select.innerHTML = "";
     languageOptions.forEach((language) => {
       const option = document.createElement("option");
       option.value = language.code;
-      option.textContent = language.name;
+      option.textContent = getLanguageName(language);
       select.append(option);
     });
   });
 
-  els.sourceLanguage.value = "pl";
-  els.targetLanguage.value = "en";
+  els.sourceLanguage.value = sourceValue;
+  els.targetLanguage.value = targetValue;
 }
 
 function updateLanguageLabels() {
   const source = getLanguage(els.sourceLanguage.value);
   const target = getLanguage(els.targetLanguage.value);
 
-  els.sourceWordLabel.textContent = `Tłumaczenie (${source.name})`;
-  els.targetWordLabel.textContent = `Słówko (${target.name})`;
-  els.sentenceLabel.textContent = `Zdanie (${target.name})`;
-  els.translationLabel.textContent = `Tłumaczenie zdania (${source.name})`;
-  els.polishWord.placeholder = `opcjonalnie, np. ${source.code === "pl" ? "dom" : source.name}`;
-  els.englishWord.placeholder = target.code === "en" ? "np. house" : "wpisz słówko";
+  const sourceName = getLanguageName(source);
+  const targetName = getLanguageName(target);
+
+  els.sourceWordLabel.textContent = t("sourceWordLabel", { language: sourceName });
+  els.targetWordLabel.textContent = t("targetWordLabel", { language: targetName });
+  els.sentenceLabel.textContent = t("sentenceLabel", { language: targetName });
+  els.translationLabel.textContent = t("translationLabel", { language: sourceName });
+  els.polishWord.placeholder = t("sourcePlaceholder", {
+    example: source.code === "pl" ? "dom" : sourceName
+  });
+  els.englishWord.placeholder = target.code === "en" ? t("targetPlaceholder") : t("targetPlaceholderGeneric");
 }
 
 function simplePolishSentence(pl) {
@@ -304,13 +672,13 @@ async function generateAiSentence() {
   els.duplicateNotice.classList.add("hidden");
 
   if (!en) {
-    els.duplicateNotice.textContent = "Wpisz słówko w języku, którego się uczysz.";
+    els.duplicateNotice.textContent = t("enterTargetWord");
     els.duplicateNotice.classList.remove("hidden");
     return null;
   }
 
   if (!apiKey) {
-    els.duplicateNotice.textContent = "Wpisz klucz OpenAI API, żeby automatycznie uzupełnić kartę.";
+    els.duplicateNotice.textContent = t("enterApiKeyFill");
     els.duplicateNotice.classList.remove("hidden");
     return null;
   }
@@ -319,7 +687,7 @@ async function generateAiSentence() {
     saveApiKey();
   }
   els.generateAi.disabled = true;
-  els.generateAi.textContent = "Generuje...";
+  els.generateAi.textContent = t("generating");
 
   try {
     const source = getLanguage(sourceLanguage);
@@ -384,17 +752,17 @@ async function generateAiSentence() {
     els.polishWord.value = parsed.source_word || pl;
     els.sentence.value = parsed.target_sentence;
     els.translation.value = parsed.source_translation;
-    els.addNotice.textContent = "AI wygenerowało zdanie.";
+    els.addNotice.textContent = t("aiGenerated");
     els.addNotice.classList.remove("hidden");
     return parsed;
   } catch (error) {
-    els.duplicateNotice.textContent = "Nie udało się wygenerować przez AI. Sprawdź klucz API i internet.";
+    els.duplicateNotice.textContent = t("aiGenerateFailed");
     els.duplicateNotice.classList.remove("hidden");
     console.error(error);
     return null;
   } finally {
     els.generateAi.disabled = false;
-    els.generateAi.textContent = "Generuj AI";
+    els.generateAi.textContent = t("generateAi");
   }
 }
 
@@ -409,7 +777,7 @@ async function playSpeech(text, kind, button) {
   }
 
   if (!apiKey) {
-    els.studyNotice.textContent = "Wpisz klucz OpenAI API, żeby odtworzyć audio.";
+    els.studyNotice.textContent = t("enterApiKeyAudio");
     els.studyNotice.classList.remove("hidden");
     return;
   }
@@ -418,7 +786,7 @@ async function playSpeech(text, kind, button) {
 
   button.disabled = true;
   const originalText = button.textContent;
-  button.textContent = "Ładuje...";
+  button.textContent = t("loading");
 
   try {
     const languageName = getLanguage(language).apiName;
@@ -451,7 +819,7 @@ async function playSpeech(text, kind, button) {
     audio.addEventListener("error", () => URL.revokeObjectURL(audioUrl), { once: true });
     await audio.play();
   } catch (error) {
-    els.studyNotice.textContent = "Nie udało się odtworzyć audio. Sprawdź klucz API i internet.";
+    els.studyNotice.textContent = t("audioFailed");
     els.studyNotice.classList.remove("hidden");
     console.error(error);
   } finally {
@@ -477,7 +845,7 @@ function renderDictionaries() {
 
   const custom = document.createElement("option");
   custom.value = "__new__";
-  custom.textContent = "Nowy słownik...";
+  custom.textContent = t("newDictionaryOption");
   els.dictionary.append(custom);
 
   els.dictionary.value = getDictionaries().includes(currentValue) ? currentValue : "Prosty slownik";
@@ -491,7 +859,7 @@ function renderCardFilters() {
 
   const allOption = document.createElement("option");
   allOption.value = "all";
-  allOption.textContent = "Wszystkie słowniki";
+  allOption.textContent = t("allDictionaries");
   els.cardDictionaryFilter.append(allOption);
 
   getDictionaries().forEach((name) => {
@@ -551,7 +919,7 @@ function updateDuplicateNotice() {
   const duplicate = findDuplicate(els.polishWord.value, els.englishWord.value, dictionary);
 
   if (duplicate && els.englishWord.value.trim()) {
-    els.duplicateNotice.textContent = `To słówko jest już w bazie: ${duplicate.pl} - ${duplicate.en}.`;
+    els.duplicateNotice.textContent = t("duplicateFound", { source: duplicate.pl, target: duplicate.en });
     els.duplicateNotice.classList.remove("hidden");
     return true;
   }
@@ -640,7 +1008,10 @@ function renderStudy() {
   els.studyEmpty.classList.add("hidden");
   els.flashcard.classList.remove("hidden");
   els.studyControls.classList.remove("hidden");
-  els.cardDirection.textContent = `${target.name} zdanie → ${source.name} tłumaczenie`;
+  els.cardDirection.textContent = t("direction", {
+    target: getLanguageName(target),
+    source: getLanguageName(source)
+  });
   els.cardProgress.textContent = `${Math.max(1, due.indexOf(state.current) + 1)}/${due.length}`;
   renderHighlightedText(els.cardPrompt, prompt, state.current.en);
   renderHighlightedText(els.cardAnswer, answer, state.current.pl);
@@ -730,7 +1101,7 @@ function formatLocalDateTime(timestamp) {
 }
 
 function deleteCard(card) {
-  if (!confirm(`Usunąć kartę "${card.en} - ${card.pl}"?`)) {
+  if (!confirm(t("deleteConfirm", { target: card.en, source: card.pl }))) {
     return;
   }
 
@@ -740,7 +1111,7 @@ function deleteCard(card) {
     pickCard();
   }
   renderAll();
-  showCardsNotice("Karta została usunięta.");
+  showCardsNotice(t("cardDeleted"));
 }
 
 function toggleSuspended(card) {
@@ -750,7 +1121,7 @@ function toggleSuspended(card) {
     pickCard();
   }
   renderAll();
-  showCardsNotice(card.suspended ? "Karta została wstrzymana." : "Karta wróciła do nauki.");
+  showCardsNotice(card.suspended ? t("cardSuspended") : t("cardResumed"));
 }
 
 function openEditDialog(card) {
@@ -789,19 +1160,19 @@ function saveEditedCard() {
   };
 
   if (!next.pl || !next.en || !next.sentence || !next.translation) {
-    els.editNotice.textContent = "Uzupełnij wszystkie pola karty.";
+    els.editNotice.textContent = t("fillAllCardFields");
     els.editNotice.classList.remove("hidden");
     return;
   }
 
   if (!Number.isFinite(next.dueAt)) {
-    els.editNotice.textContent = "Podaj poprawną datę następnej powtórki.";
+    els.editNotice.textContent = t("invalidDueDate");
     els.editNotice.classList.remove("hidden");
     return;
   }
 
   if (hasDuplicateCardData(next, card.id)) {
-    els.editNotice.textContent = "Taka karta już istnieje w tym słowniku.";
+    els.editNotice.textContent = t("duplicateCard");
     els.editNotice.classList.remove("hidden");
     return;
   }
@@ -815,7 +1186,7 @@ function saveEditedCard() {
   state.editingCardId = null;
   pickCard();
   renderAll();
-  showCardsNotice("Karta została zaktualizowana.");
+  showCardsNotice(t("cardUpdated"));
 }
 
 function renderCards() {
@@ -835,7 +1206,7 @@ function renderCards() {
   if (!cards.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = "Brak kart.";
+    empty.textContent = t("noCards");
     els.cardsList.append(empty);
     return;
   }
@@ -854,21 +1225,21 @@ function renderCards() {
     const source = getLanguage(card.sourceLanguage || "pl");
     const target = getLanguage(card.targetLanguage || "en");
     title.textContent = `${card.pl} - ${card.en}`;
-    const languageText = `${source.name} → ${target.name}`;
-    const dueText = new Date(card.dueAt).toLocaleString("pl-PL", {
+    const languageText = `${getLanguageName(source)} → ${getLanguageName(target)}`;
+    const dueText = new Date(card.dueAt).toLocaleString(state.uiLanguage === "pl" ? "pl-PL" : "en-US", {
       day: "2-digit",
       month: "2-digit",
       hour: "2-digit",
       minute: "2-digit"
     });
     const statusText = {
-      new: "nowa",
-      learning: "w trakcie",
-      mastered: "opanowana",
-      suspended: "wstrzymana"
+      new: t("statusNew"),
+      learning: t("statusLearning"),
+      mastered: t("statusMastered"),
+      suspended: t("statusSuspended")
     }[cardStatus(card)];
     sentence.textContent = `${card.sentence} / ${card.translation || simplePolishSentence(card.pl)}`;
-    meta.textContent = `${card.dictionary} (${languageText}) | status: ${statusText} | powtórki: ${card.reps}, pomyłki: ${card.lapses}, następna: ${dueText}`;
+    meta.textContent = `${card.dictionary} (${languageText}) | ${t("status")}: ${statusText} | ${t("reviews")}: ${card.reps}, ${t("lapses")}: ${card.lapses}, ${t("next")}: ${dueText}`;
     text.append(title, sentence, meta);
 
     const actions = document.createElement("div");
@@ -878,21 +1249,21 @@ function renderCards() {
     edit.type = "button";
     edit.className = "secondary compact";
     edit.dataset.icon = "✎";
-    edit.textContent = "Edytuj";
+    edit.textContent = t("edit");
     edit.addEventListener("click", () => openEditDialog(card));
 
     const suspend = document.createElement("button");
     suspend.type = "button";
     suspend.className = "subtle compact";
     suspend.dataset.icon = card.suspended ? "▶" : "⏸";
-    suspend.textContent = card.suspended ? "Wznów" : "Wstrzymaj";
+    suspend.textContent = card.suspended ? t("resume") : t("suspend");
     suspend.addEventListener("click", () => toggleSuspended(card));
 
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "danger compact";
     remove.dataset.icon = "×";
-    remove.textContent = "Usuń";
+    remove.textContent = t("remove");
     remove.addEventListener("click", () => deleteCard(card));
 
     actions.append(edit, suspend, remove);
@@ -927,23 +1298,23 @@ function validateImportedCard(card, index) {
   const missing = [];
 
   if (!normalized.pl) {
-    missing.push("tłumaczenie");
+    missing.push(t("missingSource"));
   }
 
   if (!normalized.en) {
-    missing.push("słówko");
+    missing.push(t("missingTarget"));
   }
 
   if (!normalized.sentence) {
-    missing.push("zdanie");
+    missing.push(t("missingSentence"));
   }
 
   if (!normalized.translation) {
-    missing.push("tłumaczenie zdania");
+    missing.push(t("missingSentenceTranslation"));
   }
 
   if (missing.length) {
-    throw new Error(`Karta ${index + 1} nie ma pól: ${missing.join(", ")}.`);
+    throw new Error(t("importedCardMissingFields", { number: index + 1, fields: missing.join(", ") }));
   }
 
   return normalized;
@@ -954,11 +1325,11 @@ function importCardsFromJson(text) {
   const importedCards = Array.isArray(parsed) ? parsed : parsed.cards;
 
   if (!Array.isArray(importedCards)) {
-    throw new Error("Nie znaleziono listy kart.");
+    throw new Error(t("noCardsListInFile"));
   }
 
-  if (els.importMode.value === "replace" && !confirm("Zastąpić wszystkie obecne karty importowanym plikiem?")) {
-    showCardsNotice("Import anulowany.");
+  if (els.importMode.value === "replace" && !confirm(t("replaceConfirm"))) {
+    showCardsNotice(t("importCancelled"));
     return;
   }
 
@@ -995,7 +1366,7 @@ function importCardsFromJson(text) {
   saveCards();
   pickCard();
   renderAll();
-  showCardsNotice(`Zaimportowano kart: ${cards.length}. Pominięto duplikatów: ${skipped}.`);
+  showCardsNotice(t("importDone", { count: cards.length, skipped }));
 }
 
 function renderAll() {
@@ -1056,19 +1427,19 @@ els.addForm.addEventListener("submit", async (event) => {
   els.addNotice.classList.add("hidden");
 
   if (!dictionary) {
-    els.duplicateNotice.textContent = "Wpisz nazwę nowego słownika.";
+    els.duplicateNotice.textContent = t("enterDictionaryName");
     els.duplicateNotice.classList.remove("hidden");
     return;
   }
 
   if (duplicate) {
-    els.duplicateNotice.textContent = `Nie dodano. Ta karta już istnieje: ${duplicate.pl} - ${duplicate.en}.`;
+    els.duplicateNotice.textContent = t("addDuplicate", { source: duplicate.pl, target: duplicate.en });
     els.duplicateNotice.classList.remove("hidden");
     return;
   }
 
   if (!en) {
-    els.duplicateNotice.textContent = "Wpisz słówko w języku, którego się uczysz.";
+    els.duplicateNotice.textContent = t("enterTargetWord");
     els.duplicateNotice.classList.remove("hidden");
     return;
   }
@@ -1102,7 +1473,7 @@ els.addForm.addEventListener("submit", async (event) => {
   });
 
   saveCards();
-  els.addNotice.textContent = `Dodano kartę: ${pl} - ${en}.`;
+  els.addNotice.textContent = t("cardAdded", { source: pl, target: en });
   els.addNotice.classList.remove("hidden");
   els.duplicateNotice.classList.add("hidden");
   els.addForm.reset();
@@ -1173,7 +1544,7 @@ els.importFile.addEventListener("change", async () => {
   try {
     importCardsFromJson(await file.text());
   } catch (error) {
-    els.cardsNotice.textContent = `Nie udało się zaimportować: ${error.message}`;
+    els.cardsNotice.textContent = t("importFailed", { message: error.message });
     els.cardsNotice.className = "notice";
     console.error(error);
   }
@@ -1192,6 +1563,12 @@ els.cancelEdit.addEventListener("click", () => {
 els.themeToggle.addEventListener("click", () => {
   const currentTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
   setTheme(currentTheme === "dark" ? "light" : "dark");
+});
+
+els.uiLanguage.addEventListener("change", () => {
+  state.uiLanguage = els.uiLanguage.value === "en" ? "en" : "pl";
+  localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, state.uiLanguage);
+  applyUiLanguage();
 });
 
 els.flashcard.addEventListener("click", () => {
@@ -1232,9 +1609,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-renderLanguageOptions();
-renderDictionaries();
 loadApiKey();
-applyTheme(loadTheme());
+renderLanguageOptions();
 pickCard();
-renderAll();
+applyUiLanguage();

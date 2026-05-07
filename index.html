@@ -25,12 +25,19 @@
           </div>
         </div>
         <div class="topbar-actions">
+          <div class="language-control">
+            <label id="uiLanguageLabel" for="uiLanguage">Język</label>
+            <select id="uiLanguage" aria-labelledby="uiLanguageLabel">
+              <option value="pl">Polski</option>
+              <option value="en">English</option>
+            </select>
+          </div>
           <button id="themeToggle" class="theme-toggle subtle" type="button" aria-pressed="false" data-icon="◐">Ciemny motyw</button>
           <div class="stats" aria-label="Statystyki">
-            <span><strong id="totalCards">0</strong> kart</span>
-            <span><strong id="dueCards">0</strong> do nauki</span>
-            <span><strong id="newCardsLeft">0</strong> nowych dziś</span>
-            <span><strong id="studiedToday">0</strong> dziś</span>
+            <span><strong id="totalCards">0</strong> <span id="totalCardsLabel">kart</span></span>
+            <span><strong id="dueCards">0</strong> <span id="dueCardsLabel">do nauki</span></span>
+            <span><strong id="newCardsLeft">0</strong> <span id="newCardsLeftLabel">nowych dziś</span></span>
+            <span><strong id="studiedToday">0</strong> <span id="studiedTodayLabel">dziś</span></span>
           </div>
         </div>
       </header>
@@ -147,7 +154,7 @@
               <option value="suspended">Wstrzymane</option>
             </select>
             <label class="limit-control" for="newCardsLimit">
-              Nowe/dzien
+              <span id="newCardsLimitLabel">Nowe/dzień</span>
               <input id="newCardsLimit" type="number" min="0" max="200" step="1">
             </label>
             <select id="importMode" aria-label="Tryb importu">
@@ -196,7 +203,7 @@
           </div>
           <label class="check-control">
             <input id="editSuspended" name="editSuspended" type="checkbox">
-            Wstrzymaj kartę
+            <span id="editSuspendedLabel">Wstrzymaj kartę</span>
           </label>
           <div id="editNotice" class="notice hidden" role="status"></div>
           <div class="button-row">

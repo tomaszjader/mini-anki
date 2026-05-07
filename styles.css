@@ -244,6 +244,22 @@ h1 {
   gap: 10px;
 }
 
+.language-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.language-control label {
+  color: var(--muted);
+}
+
+.language-control select {
+  width: auto;
+  min-width: 120px;
+  padding: 9px 12px;
+}
+
 .theme-toggle {
   white-space: nowrap;
 }
@@ -578,6 +594,14 @@ textarea {
 
   .topbar-actions {
     justify-items: stretch;
+  }
+
+  .language-control {
+    justify-content: space-between;
+  }
+
+  .language-control select {
+    width: 160px;
   }
 
   .stats {
