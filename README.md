@@ -102,7 +102,12 @@ Podczas nauki:
 .
 |-- index.html   # struktura aplikacji
 |-- styles.css   # wyglad i responsywnosc
-`-- app.js       # logika fiszek, AI, audio, import/eksport
+|-- config.js    # stale, jezyki i interwaly powtorek
+|-- i18n.js      # tlumaczenia interfejsu
+|-- cards.js     # model kart i logika powtorek
+|-- storage.js   # zapis i odczyt localStorage
+|-- openai.js    # generowanie AI i audio
+`-- app.js       # UI, renderowanie i zdarzenia
 ```
 
 ### Dane i prywatnosc
@@ -225,7 +230,12 @@ During study:
 .
 |-- index.html   # app structure
 |-- styles.css   # styling and responsiveness
-`-- app.js       # flashcard, AI, audio, import/export logic
+|-- config.js    # constants, languages, and review intervals
+|-- i18n.js      # UI translations
+|-- cards.js     # card model and review logic
+|-- storage.js   # localStorage persistence
+|-- openai.js    # AI generation and audio
+`-- app.js       # UI, rendering, and events
 ```
 
 ### Data and Privacy
