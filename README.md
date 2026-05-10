@@ -1,6 +1,6 @@
 # Mini Anki
 
-README jest dostepne w dwoch jezykach:
+README jest dostępne w dwóch językach:
 
 - [Polski](#polski)
 - [English](#english)
@@ -9,129 +9,127 @@ README jest dostepne w dwoch jezykach:
 
 ## Polski
 
-Mini Anki to prosta lokalna aplikacja do nauki slowek metoda fiszek. Dziala w przegladarce, zapisuje dane w `localStorage` i pozwala tworzyc wlasne slowniki, uczyc sie kart w trybie powtorek, generowac przykladowe zdania przez OpenAI oraz odtwarzac wymowe.
+Mini Anki to prosta lokalna aplikacja do nauki słówek metodą fiszek. Działa w przeglądarce, zapisuje dane w `localStorage` i pozwala tworzyć własne słowniki, uczyć się kart w trybie powtórek, generować przykładowe zdania przez OpenAI oraz odtwarzać wymowę.
 
 ### Funkcje
 
-- nauka fiszek w trybie powtorek,
-- oceny odpowiedzi: `Jeszcze raz`, `Trudna`, `Umiem`, `Latwa`,
-- limit nowych kart na dzien,
-- dodawanie slowek w wielu jezykach,
-- automatyczne generowanie tlumaczenia i zdania przez OpenAI,
-- odtwarzanie slowa oraz zdania jako audio,
+- nauka fiszek w trybie powtórek,
+- oceny odpowiedzi: `Jeszcze raz`, `Trudna`, `Umiem`, `Łatwa`,
+- limit nowych kart na dzień,
+- dodawanie słówek w wielu językach,
+- automatyczne generowanie tłumaczenia i zdania przez OpenAI,
+- odtwarzanie słowa oraz zdania jako audio,
 - wyszukiwanie kart,
 - import i eksport kart do pliku JSON,
 - jasny i ciemny motyw,
-- zapis danych lokalnie w przegladarce.
+- zapis danych lokalnie w przeglądarce.
 
 ### Uruchamianie
 
-Projekt nie wymaga instalowania zaleznosci ani procesu budowania.
+Projekt nie wymaga instalowania zależności ani procesu budowania.
 
-1. Otworz plik `index.html` w przegladarce.
+1. Otwórz plik `index.html` w przeglądarce.
 2. Korzystaj z aplikacji lokalnie.
 
-Mozesz tez uruchomic prosty serwer statyczny:
+Możesz też uruchomić prosty serwer statyczny:
 
 ```bash
 python -m http.server 8000
 ```
 
-Potem otworz:
+Potem otwórz:
 
 ```text
 http://localhost:8000
 ```
 
-### Jak uzywac
+### Jak używać
 
 #### Nauka
 
-1. Wejdz w zakladke `Nauka`.
+1. Wejdź w zakładkę `Nauka`.
 2. Przeczytaj zdanie na fiszce.
-3. Kliknij `Pokaz odpowiedz`, aby zobaczyc tlumaczenie.
-4. Ocen odpowiedz:
-   - `Jeszcze raz` - gdy nie pamietasz,
-   - `Trudna` - gdy odpowiedz byla trudna,
-   - `Umiem` - gdy odpowiedz byla poprawna,
-   - `Latwa` - gdy znasz karte bardzo dobrze.
+3. Kliknij `Pokaż odpowiedź`, aby zobaczyć tłumaczenie.
+4. Oceń odpowiedź:
+   - `Jeszcze raz` - gdy nie pamiętasz,
+   - `Trudna` - gdy odpowiedź była trudna,
+   - `Umiem` - gdy odpowiedź była poprawna,
+   - `Łatwa` - gdy znasz kartę bardzo dobrze.
 
-Karty pojawia sie ponownie po czasie zaleznym od wybranej oceny.
+Karty pojawią się ponownie po czasie zależnym od wybranej oceny.
 
 #### Dodawanie kart
 
-1. Wejdz w zakladke `Dodaj`.
-2. Wybierz slownik albo utworz nowy.
-3. Wybierz jezyk, ktory znasz, oraz jezyk, ktorego sie uczysz.
-4. Wpisz slowko.
-5. Uzupelnij tlumaczenie i zdanie recznie albo uzyj `Generuj AI`.
-6. Kliknij `Dodaj karte`.
+1. Wejdź w zakładkę `Dodaj`.
+2. Wybierz słownik albo utwórz nowy.
+3. Wybierz język, który znasz, oraz język, którego się uczysz.
+4. Wpisz słówko.
+5. Uzupełnij tłumaczenie i zdanie ręcznie albo użyj `Generuj AI`.
+6. Kliknij `Dodaj kartę`.
 
 #### OpenAI i audio
 
-Funkcje `Generuj AI`, `Odtworz slowo` i `Odtworz zdanie` wymagaja klucza OpenAI API.
+Funkcje `Generuj AI`, `Odtwórz słowo` i `Odtwórz zdanie` wymagają klucza OpenAI API.
 
 1. Wklej klucz w polu `Klucz OpenAI API`.
-2. Klucz zostanie zapisany tylko lokalnie w tej przegladarce.
-3. Aplikacja uzyje go bezposrednio z poziomu przegladarki.
+2. Klucz zostanie zapisany tylko lokalnie w tej przeglądarce.
+3. Aplikacja użyje go bezpośrednio z poziomu przeglądarki.
 
-Uwaga: nie publikuj tej aplikacji z wpisanym kluczem API. Klucz jest prywatny i powinien byc uzywany tylko lokalnie.
+Uwaga: nie publikuj tej aplikacji z wpisanym kluczem API. Klucz jest prywatny i powinien być używany tylko lokalnie.
 
 #### Import i eksport
 
-W zakladce `Karty` mozesz:
+W zakładce `Karty` możesz:
 
-- kliknac `Eksport`, aby pobrac wszystkie karty jako plik JSON,
-- kliknac `Import`, aby wczytac wczesniej zapisany plik JSON,
-- wyszukiwac karty po slowku,
-- zmienic limit `Nowe/dzien`.
+- kliknąć `Eksport`, aby pobrać wszystkie karty jako plik JSON,
+- kliknąć `Import`, aby wczytać wcześniej zapisany plik JSON,
+- wyszukiwać karty po słówku,
+- zmienić limit `Nowe/dzień`.
 
-### Skroty klawiaturowe
+### Skróty klawiaturowe
 
 Podczas nauki:
 
-- `Spacja` - pokazuje odpowiedz,
+- `Spacja` - pokazuje odpowiedź,
 - `1` - Jeszcze raz,
 - `2` - Trudna,
 - `3` - Umiem,
-- `4` - Latwa.
+- `4` - Łatwa.
 
 ### Struktura projektu
 
 ```text
 .
 |-- index.html   # struktura aplikacji
-|-- styles.css   # wyglad i responsywnosc
-|-- config.js    # stale, jezyki i interwaly powtorek
-|-- i18n.js      # tlumaczenia interfejsu
-|-- cards.js     # model kart i logika powtorek
+|-- styles.css   # wygląd i responsywność
+|-- config.js    # stałe, języki i interwały powtórek
+|-- i18n.js      # tłumaczenia interfejsu
+|-- cards.js     # model kart i logika powtórek
 |-- storage.js   # zapis i odczyt localStorage
 |-- openai.js    # generowanie AI i audio
 `-- app.js       # UI, renderowanie i zdarzenia
 ```
 
-### Dane i prywatnosc
+### Dane i prywatność
 
-Aplikacja zapisuje dane w `localStorage` przegladarki:
+Aplikacja zapisuje dane w `localStorage` przeglądarki:
 
 - fiszki,
 - ustawienia,
 - wybrany motyw,
-- klucz OpenAI API, jesli go wpiszesz.
+- klucz OpenAI API, jeśli go wpiszesz.
 
-Usuniecie danych strony w przegladarce moze skasowac zapisane karty. Przed czyszczeniem danych warto uzyc eksportu.
+Usunięcie danych strony w przeglądarce może skasować zapisane karty. Przed czyszczeniem danych warto użyć eksportu.
 
-### Rozwoj
+### Rozwój
 
-To mala aplikacja frontendowa bez procesu budowania. Po zmianach w plikach wystarczy odswiezyc strone w przegladarce.
+To mała aplikacja frontendowa bez procesu budowania. Po zmianach w plikach wystarczy odświeżyć stronę w przeglądarce.
 
-Pomysly na dalszy rozwoj:
+Pomysły na dalszy rozwój:
 
-- edycja istniejacych kart,
-- filtrowanie po slownikach,
-- potwierdzenie przed usuwaniem,
 - statystyki nauki,
-- synchronizacja miedzy urzadzeniami.
+- lepszy raport importu dla dużych plików,
+- synchronizacja między urządzeniami.
 
 ---
 
@@ -177,12 +175,12 @@ http://localhost:8000
 
 1. Open the `Nauka` tab.
 2. Read the sentence on the flashcard.
-3. Click `Pokaz odpowiedz` to reveal the translation.
+3. Click `Pokaż odpowiedź` to reveal the translation.
 4. Rate your answer:
    - `Jeszcze raz` - if you did not remember it,
    - `Trudna` - if it was difficult,
    - `Umiem` - if you answered correctly,
-   - `Latwa` - if you know the card very well.
+   - `Łatwa` - if you know the card very well.
 
 Cards return later based on the rating you choose.
 
@@ -197,7 +195,7 @@ Cards return later based on the rating you choose.
 
 #### OpenAI and Audio
 
-The `Generuj AI`, `Odtworz slowo`, and `Odtworz zdanie` features require an OpenAI API key.
+The `Generuj AI`, `Odtwórz słowo`, and `Odtwórz zdanie` features require an OpenAI API key.
 
 1. Paste the key into the `Klucz OpenAI API` field.
 2. The key is stored only locally in this browser.
@@ -212,7 +210,7 @@ In the `Karty` tab you can:
 - click `Eksport` to download all cards as a JSON file,
 - click `Import` to load a previously saved JSON file,
 - search cards by word,
-- change the `Nowe/dzien` limit.
+- change the `Nowe/dzień` limit.
 
 ### Keyboard Shortcuts
 

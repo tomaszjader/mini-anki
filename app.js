@@ -806,11 +806,22 @@
     const cards = [];
     let skipped = 0;
 
+    const failures = [];
+
     importedCards.forEach((card, index) => {
-      const normalized = validateImportedCard({
-        ...card,
-        id: card.id && !usedIds.has(card.id) ? card.id : crypto.randomUUID()
-      }, index);
+      const candidate = card && typeof card === "object" ? card : {};
+      let normalized;
+
+      try {
+        normalized = validateImportedCard({
+          ...candidate,
+          id: candidate.id && !usedIds.has(candidate.id) ? candidate.id : crypto.randomUUID()
+        }, index);
+      } catch (error) {
+        failures.push(error.message);
+        return;
+      }
+
       usedIds.add(normalized.id);
       const fingerprint = cardFingerprint(normalized);
 
@@ -823,6 +834,10 @@
       cards.push(normalized);
     });
 
+    if (!cards.length && failures.length) {
+      throw new Error(failures.slice(0, 3).join(" "));
+    }
+
     state.cards = importMode === "replace" ? cards : [...cards, ...state.cards];
     if (parsed.settings) {
       state.settings = normalizeSettings(parsed.settings);
@@ -831,6 +846,17 @@
     saveCards();
     pickCard();
     renderAll();
+    if (failures.length) {
+      els.cardsNotice.textContent = t("importDoneWithErrors", {
+        count: cards.length,
+        skipped,
+        failed: failures.length,
+        errors: failures.slice(0, 3).join(" ")
+      });
+      els.cardsNotice.className = "notice";
+      return;
+    }
+
     showCardsNotice(t("importDone", { count: cards.length, skipped }));
   }
 
